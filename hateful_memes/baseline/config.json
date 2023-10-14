@@ -1,0 +1,20 @@
+{
+  "hparams":
+    {
+      "train_path": "../../data/hateful_memes/train.jsonl",
+      "dev_path": "../../data/hateful_memes/dev_seen.jsonl",
+      "img_dir": "../../data/hateful_memes",
+      "image_dim": 224,
+      "embedding_dim": 150,
+      "language_feature_dim": 300,
+      "vision_feature_dim": 300,
+      "fusion_output_size": 256,
+      "dev_limit": null,
+      "lr": 5e-05,
+      "max_epochs": 10,
+      "n_gpu": 1,
+      "batch_size": 4,
+      "accumulate_grad_batches": 16,
+      "early_stop_patience": 3
+    }
+}
