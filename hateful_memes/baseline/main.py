@@ -5,6 +5,7 @@ import fasttext
 import pandas as pd
 import torch
 import torchvision
+import mlflow
 from data_utils import HatefulMemesDataset
 from model import HatefulMemesModel
 from torch import optim
@@ -12,15 +13,16 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from utils import load_config
 
+MLFLOW_TRACKING_URI = '/home2/faculty/mgalkowski/memes_analysis/mlflow_data'
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+mlflow.set_experiment("hateful_memes")
+mlflow.pytorch.autolog()
 
 def main(*args, **kwargs):
     data_dir = Path(args.get("data_dir"))
     log_dir = Path(args.get("log_dir"))
     model_dir = Path(args.get("model_dir"))
-
-    print(data_dir)
-    print(log_dir)
-    print(model_dir)
 
     config = load_config(Path(args.get("config_path")))
     hparams = config["hparams"]
@@ -195,11 +197,6 @@ if __name__ == "__main__":
         "--log_dir",
         default="../logs/baseline",
         help="The output directory where the logs will be written.",
-    )
-    arg_parser.add_argument(
-        "--model_dir",
-        default="../models/baseline",
-        help="The output directory where the model checkpoints will be written.",
     )
     args = arg_parser.parse_args()
     main(args)
