@@ -97,7 +97,7 @@ class HatefulMemesDataset(datasets.GeneratorBasedBuilder):
         # It can accept any type or nested list/dict and will give back the same structure with the url replaced with path to local files.
         # By default the archives will be extracted and a path to a cached folder where they are extracted is returned instead of the archive
         # urls = _URLS[self.config.name]
-        data_dir = Path("o:\\memes_analysis\\data\data_hf")
+        data_dir = Path("/home2/faculty/mgalkowski/memes_analysis/data/data_hf")
         return [
             datasets.SplitGenerator(
                 name=datasets.Split.TRAIN,
