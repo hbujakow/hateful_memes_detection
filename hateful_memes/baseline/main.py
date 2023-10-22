@@ -5,6 +5,7 @@ import fasttext
 import pandas as pd
 import torch
 import torchvision
+import mlflow
 from data_utils import HatefulMemesDataset
 from model import HatefulMemesModel
 from torch import optim
@@ -12,22 +13,23 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from utils import load_config
 
+MLFLOW_TRACKING_URI = '/home2/faculty/mgalkowski/memes_analysis/mlflow_data'
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+mlflow.set_experiment("hateful_memes")
+mlflow.pytorch.autolog()
 
 def main(*args, **kwargs):
-    data_dir = Path(args.get("data_dir"))
-    log_dir = Path(args.get("log_dir"))
-    model_dir = Path(args.get("model_dir"))
+    arguments = args[0]
+    data_dir = Path(arguments.data_dir)
+    log_dir = Path(arguments.log_dir)
 
-    print(data_dir)
-    print(log_dir)
-    print(model_dir)
-
-    config = load_config(Path(args.get("config_path")))
+    config = load_config(Path(arguments.config_path))
     hparams = config["hparams"]
 
     train_loader, dev_loader, test_loader = data_preparation(data_dir, hparams)
 
-    train_model(hparams)
+    train_model(hparams, train_loader, dev_loader)
 
 
 def data_preparation(data_dir: Path, hparams: dict):
@@ -128,50 +130,38 @@ def train_model(hparams: dict, train_loader: DataLoader, dev_loader: DataLoader)
         for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
             optimizer.zero_grad()
 
-            text, image, label = batch
+            text, image, label = batch['text'], batch['image'], batch['label']
             preds = model(text, image)
-
-            # Calculate the loss
+            
             loss = loss_fn(preds, label)
 
-            # Backpropagation
             loss.backward()
             optimizer.step()
 
-            # Update loss and batch count
             total_loss += loss.item()
             num_batches += 1
 
-        # Calculate average training loss for the epoch
         avg_train_loss = total_loss / num_batches
 
-        # Set the model to evaluation mode
         model.eval()
 
-        # Initialize variables to track validation loss
         total_val_loss = 0.0
         num_val_batches = 0
 
-        # Iterate through the validation data
         with torch.no_grad():
             for val_batch in tqdm(
                 dev_loader, desc=f"Validation - Epoch {epoch + 1}/{num_epochs}"
             ):
-                # Forward pass
-                text, image, label = val_batch
+                text, image, label = batch['text'], batch['image'], batch['label']
                 val_preds = model(text, image)
 
-                # Calculate the validation loss
                 val_loss = loss_fn(val_preds, label)
 
-                # Update validation loss and batch count
                 total_val_loss += val_loss.item()
                 num_val_batches += 1
 
-        # Calculate average validation loss for the epoch
         avg_val_loss = total_val_loss / num_val_batches
 
-        # Print training and validation loss for the epoch
         print(
             f"Epoch {epoch + 1}/{num_epochs}: "
             f"Train Loss: {avg_train_loss:.4f}, "
@@ -195,11 +185,6 @@ if __name__ == "__main__":
         "--log_dir",
         default="../logs/baseline",
         help="The output directory where the logs will be written.",
-    )
-    arg_parser.add_argument(
-        "--model_dir",
-        default="../models/baseline",
-        help="The output directory where the model checkpoints will be written.",
     )
     args = arg_parser.parse_args()
     main(args)

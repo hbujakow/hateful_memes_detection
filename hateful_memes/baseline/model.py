@@ -37,8 +37,8 @@ class LanguageAndVisionConcat(torch.nn.Module):
         fused = self.dropout(torch.nn.functional.relu(self.fusion(combined)))
         logits = self.fc(fused)
         pred = torch.nn.functional.softmax(logits)
-        loss = self.loss_fn(pred, label) if label is not None else label
-        return (pred, loss)
+        # loss = self.loss_fn(pred, label) if label is not None else label
+        return pred
 
 
 class HatefulMemesModel(nn.Module):

@@ -12,8 +12,8 @@
       "dev_limit": null,
       "lr": 5e-05,
       "max_epochs": 10,
-      "n_gpu": 1,
-      "batch_size": 4,
+      "n_gpu": 4,
+      "batch_size": 64,
       "accumulate_grad_batches": 16,
       "early_stop_patience": 3
     }
