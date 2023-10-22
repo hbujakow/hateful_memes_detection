@@ -4,8 +4,8 @@
 #SBATCH --partition=short
 #SBATCH --cpus-per-task=8
 #SBATCH --gpus-per-task=4
-#SBATCH --mem=20G
-#SBATCH --time=12:00:00
+#SBATCH --mem=100G
+#SBATCH --time=24:00:00
 #SBATCH --ntasks=1
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=mikolaj.galkowski.stud@pw.edu.pl

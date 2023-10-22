@@ -12,6 +12,7 @@ from torch import optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from utils import load_config
+from datetime import datetime
 
 MLFLOW_TRACKING_URI = '/home2/faculty/mgalkowski/memes_analysis/mlflow_data'
 
@@ -29,7 +30,7 @@ def main(*args, **kwargs):
 
     train_loader, dev_loader, test_loader = data_preparation(data_dir, hparams)
 
-    train_model(hparams, train_loader, dev_loader)
+    train_test_model(hparams, train_loader, dev_loader)
 
 
 def data_preparation(data_dir: Path, hparams: dict):
@@ -114,60 +115,73 @@ def data_preparation(data_dir: Path, hparams: dict):
     return train_loader, dev_loader, test_loader
 
 
-def train_model(hparams: dict, train_loader: DataLoader, dev_loader: DataLoader):
+def train_test_model(hparams: dict, train_loader: DataLoader, dev_loader: DataLoader):
     model = HatefulMemesModel(hparams)
     optimizer = optim.AdamW(model.parameters(), lr=hparams.get("lr", 0.001))
     loss_fn = torch.nn.CrossEntropyLoss()
 
     num_epochs = hparams.get("num_epochs", 10)
 
-    for epoch in range(num_epochs):
-        model.train()
+    timestamp = datetime.now().strftime('%d_%m_%Y__%H_%M_%S')
+    
+    with mlflow.start_run(run_name=f'baseline_{timestamp}'):
+        mlflow.log_artifact('config.json')
+        
+        for epoch in range(num_epochs):
+            model.train()
 
-        total_loss = 0.0
-        num_batches = 0
+            total_loss = 0.0
+            num_batches = 0
 
-        for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
-            optimizer.zero_grad()
+            for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
+                optimizer.zero_grad()
 
-            text, image, label = batch['text'], batch['image'], batch['label']
-            preds = model(text, image)
-            
-            loss = loss_fn(preds, label)
-
-            loss.backward()
-            optimizer.step()
-
-            total_loss += loss.item()
-            num_batches += 1
-
-        avg_train_loss = total_loss / num_batches
-
-        model.eval()
-
-        total_val_loss = 0.0
-        num_val_batches = 0
-
-        with torch.no_grad():
-            for val_batch in tqdm(
-                dev_loader, desc=f"Validation - Epoch {epoch + 1}/{num_epochs}"
-            ):
                 text, image, label = batch['text'], batch['image'], batch['label']
-                val_preds = model(text, image)
+                preds = model(text, image)
+                
+                loss = loss_fn(preds, label)
 
-                val_loss = loss_fn(val_preds, label)
+                loss.backward()
+                optimizer.step()
 
-                total_val_loss += val_loss.item()
-                num_val_batches += 1
+                total_loss += loss.item()
+                num_batches += 1
 
-        avg_val_loss = total_val_loss / num_val_batches
+            avg_train_loss = total_loss / num_batches
 
-        print(
-            f"Epoch {epoch + 1}/{num_epochs}: "
-            f"Train Loss: {avg_train_loss:.4f}, "
-            f"Validation Loss: {avg_val_loss:.4f}"
-        )
+            model.eval()
 
+            total_val_loss = 0.0
+            num_val_batches = 0
+
+            with torch.no_grad():
+                for val_batch in tqdm(
+                    dev_loader, desc=f"Validation - Epoch {epoch + 1}/{num_epochs}"
+                ):
+                    text, image, label = val_batch['text'], val_batch['image'], val_batch['label']
+                    val_preds = model(text, image)
+
+                    val_loss = loss_fn(val_preds, label)
+
+                    total_val_loss += val_loss.item()
+                    num_val_batches += 1
+
+            avg_val_loss = total_val_loss / num_val_batches
+
+            print(
+                f"Epoch {epoch + 1}/{num_epochs}: "
+                f"Train Loss: {avg_train_loss:.4f}, "
+                f"Validation Loss: {avg_val_loss:.4f}"
+            )
+            
+            metrics = {
+                "train_loss": avg_train_loss,
+                "val_loss": avg_val_loss    
+            }
+            
+            mlflow.log_metrics(metrics, step=epoch)
+
+        mlflow.pytorch.log_model(model, f"baseline_model_{timestamp}")
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
