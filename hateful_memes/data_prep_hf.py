@@ -24,10 +24,10 @@ for split in tqdm(data):
     curr_data = data[split]
 
     with open(f"../data/data_hf/{split}/metadata.tsv", "w+", encoding="utf-8") as f:
-        f.write("file_name\timg_text\n")
+        f.write("file_name\timg_text\tlabel\n")
         dst_path = f"../data/data_hf/{split}"
         for row in tqdm(curr_data.iterrows()):
             src_path = f"../data/hateful_memes/img/{row[1]['img_num']}"
             shutil.copy(src_path, dst_path)
 
-            f.write(f"{row[1]['img_num']}\t{row[1]['text']}\n")
+            f.write(f"{row[1]['img_num']}\t{row[1]['text']}\t{row[1]['label']}\n")

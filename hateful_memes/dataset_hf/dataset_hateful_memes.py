@@ -62,6 +62,7 @@ class HatefulMemesDataset(datasets.GeneratorBasedBuilder):
                 {
                     "image": datasets.Image(),
                     "caption": datasets.Value("string"),
+                    "label": datasets.Value("int8"),
                 }
             )
         # else:  # This is an example to show how to have different features for "first_domain" and "second_domain"
@@ -135,6 +136,7 @@ class HatefulMemesDataset(datasets.GeneratorBasedBuilder):
             yield key, {
                 "image": str(filepath / data["file_name"]),
                 "caption": data["img_text"],
+                "label": data["label"],
             }
             # else:
             # yield key, {
