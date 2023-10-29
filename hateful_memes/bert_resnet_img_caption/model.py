@@ -7,7 +7,7 @@ class HateClassifier(nn.Module):
     def __init__(
         self,
         language_model,
-        vision_model: int = 512,
+        vision_model,
         features_dim: int = 768,
         fusion_output_size: int = 256,
         dropout_p: float = 0.15,
@@ -32,7 +32,7 @@ class HateClassifier(nn.Module):
                 token_type_ids=token_type_ids,
             ).last_hidden_state[:, 0, :]
         )
-        image_features = torch.nn.functional.relu(self.vision_model(image))
+        image_features = torch.nn.functional.relu(self.(image))
         combined = torch.cat([text_features, image_features], dim=1)
 
         fused = self.dropout(torch.nn.functional.relu(self.fusion(combined)))
