@@ -1,0 +1,24 @@
+{
+    "model_dim": 768,
+    "language_model":
+        {
+            "checkpoint": "bert-base-uncased",
+            "output_dim": 512,
+            "embedding_dim": 100
+        },
+    "hparams":
+        {
+            "train_path": "../../data/hateful_memes/train.jsonl",
+            "dev_path": "../../data/hateful_memes/dev_seen.jsonl",
+            "img_dir": "../../data/hateful_memes",
+            "image_dim": 224,
+            "fusion_output_size": 256,
+            "dev_limit": null,
+            "lr": 5e-05,
+            "num_epochs": 5,
+            "n_gpu": 4,
+            "batch_size": 64,
+            "accumulate_grad_batches": 16,
+            "early_stop_patience": 3
+        }
+}
