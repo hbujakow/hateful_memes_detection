@@ -14,11 +14,12 @@ from tqdm import tqdm
 from utils import load_config
 from datetime import datetime
 
-MLFLOW_TRACKING_URI = '/home2/faculty/mgalkowski/memes_analysis/mlflow_data'
+MLFLOW_TRACKING_URI = "/home2/faculty/mgalkowski/memes_analysis/mlflow_data"
 
 mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("hateful_memes")
 mlflow.pytorch.autolog()
+
 
 def main(*args, **kwargs):
     arguments = args[0]
@@ -122,11 +123,11 @@ def train_test_model(hparams: dict, train_loader: DataLoader, dev_loader: DataLo
 
     num_epochs = hparams.get("num_epochs", 10)
 
-    timestamp = datetime.now().strftime('%d_%m_%Y__%H_%M_%S')
-    
-    with mlflow.start_run(run_name=f'baseline_{timestamp}'):
-        mlflow.log_artifact('config.json')
-        
+    timestamp = datetime.now().strftime("%d_%m_%Y__%H_%M_%S")
+
+    with mlflow.start_run(run_name=f"baseline_{timestamp}"):
+        mlflow.log_artifact("config.json")
+
         for epoch in range(num_epochs):
             model.train()
 
@@ -136,9 +137,9 @@ def train_test_model(hparams: dict, train_loader: DataLoader, dev_loader: DataLo
             for batch in tqdm(train_loader, desc=f"Epoch {epoch + 1}/{num_epochs}"):
                 optimizer.zero_grad()
 
-                text, image, label = batch['text'], batch['image'], batch['label']
+                text, image, label = batch["text"], batch["image"], batch["label"]
                 preds = model(text, image)
-                
+
                 loss = loss_fn(preds, label)
 
                 loss.backward()
@@ -158,7 +159,11 @@ def train_test_model(hparams: dict, train_loader: DataLoader, dev_loader: DataLo
                 for val_batch in tqdm(
                     dev_loader, desc=f"Validation - Epoch {epoch + 1}/{num_epochs}"
                 ):
-                    text, image, label = val_batch['text'], val_batch['image'], val_batch['label']
+                    text, image, label = (
+                        val_batch["text"],
+                        val_batch["image"],
+                        val_batch["label"],
+                    )
                     val_preds = model(text, image)
 
                     val_loss = loss_fn(val_preds, label)
@@ -173,15 +178,13 @@ def train_test_model(hparams: dict, train_loader: DataLoader, dev_loader: DataLo
                 f"Train Loss: {avg_train_loss:.4f}, "
                 f"Validation Loss: {avg_val_loss:.4f}"
             )
-            
-            metrics = {
-                "train_loss": avg_train_loss,
-                "val_loss": avg_val_loss    
-            }
-            
+
+            metrics = {"train_loss": avg_train_loss, "val_loss": avg_val_loss}
+
             mlflow.log_metrics(metrics, step=epoch)
 
         mlflow.pytorch.log_model(model, f"baseline_model_{timestamp}")
+
 
 if __name__ == "__main__":
     arg_parser = argparse.ArgumentParser()
