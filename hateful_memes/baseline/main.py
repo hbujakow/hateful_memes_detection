@@ -1,18 +1,18 @@
 import argparse
+from datetime import datetime
 from pathlib import Path
 
 import fasttext
+import mlflow
 import pandas as pd
 import torch
 import torchvision
-import mlflow
 from data_utils import HatefulMemesDataset
 from model import HatefulMemesModel
 from torch import optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from utils import load_config
-from datetime import datetime
 
 MLFLOW_TRACKING_URI = "/home2/faculty/mgalkowski/memes_analysis/mlflow_data"
 
