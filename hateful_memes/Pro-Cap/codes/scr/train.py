@@ -3,12 +3,11 @@ import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import utils
+from dataset import MultiModalData
 from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup
-
-import utils
-from dataset import MultiModalData
 
 
 def bce_for_loss(logits, labels):
@@ -54,18 +53,14 @@ def train_for_epoch(opt, model, train_loader, test_loader):
     # initialization of saving path
     if opt.SAVE:
         model_path = os.path.join(
-            "../models", "_".join([opt.MODEL, str(opt.SEED), opt.DATASET])
+            "../models", "_".join(["pbm", str(opt.SEED), opt.DATASET])
         )
-        if os.path.exists(model_path) == False:
+        if not os.path.exists(model_path):
             os.mkdir(model_path)
-
-    # multi-qeury configuration
-    # if opt.MULTI_QUERY and opt.MODEL == "pbm":
-        # tokenizer = RobertaTokenizer.from_pretrained("roberta-large")
 
     # initialization of logger
     log_path = os.path.join(opt.LOG_PATH)
-    if os.path.exists(log_path) == False:
+    if not os.path.exists(log_path):
         os.mkdir(log_path)
 
     logger = utils.Logger(os.path.join(log_path, str(opt.SAVE_NUM) + ".txt"))
@@ -77,57 +72,52 @@ def train_for_epoch(opt, model, train_loader, test_loader):
     )
     logger.write("Max length of sentences: %d" % (model.max_length))
 
-    if opt.MODEL == "pbm":
-        # initialization of optimizer
-        params = {}
-        for n, p in model.named_parameters():
-            if opt.FIX_LAYERS > 0:
-                if "encoder.layer" in n:
-                    try:
-                        layer_num = int(n[n.find("encoder.layer") + 14 :].split(".")[0])
-                    except:
-                        print(n)
-                        raise Exception("")
-                    if layer_num >= opt.FIX_LAYERS:
-                        print("yes", n)
-                        params[n] = p
-                    else:
-                        print("no ", n)
-                elif "embeddings" in n:
-                    print("no ", n)
-                else:
+    # initialization of optimizer
+    params = {}
+    for n, p in model.named_parameters():
+        if opt.FIX_LAYERS > 0:
+            if "encoder.layer" in n:
+                try:
+                    layer_num = int(n[n.find("encoder.layer") + 14 :].split(".")[0])
+                except:
+                    print(n)
+                    raise Exception("")
+                if layer_num >= opt.FIX_LAYERS:
                     print("yes", n)
                     params[n] = p
+                else:
+                    print("no ", n)
+            elif "embeddings" in n:
+                print("no ", n)
             else:
+                print("yes", n)
                 params[n] = p
-        no_decay = ["bias", "LayerNorm.weight"]
-        optimizer_grouped_parameters = [
-            {
-                "params": [
-                    p for n, p in params.items() if not any(nd in n for nd in no_decay)
-                ],
-                "weight_decay": opt.WEIGHT_DECAY,
-            },
-            {
-                "params": [
-                    p for n, p in params.items() if any(nd in n for nd in no_decay)
-                ],
-                "weight_decay": 0.0,
-            },
-        ]
+        else:
+            params[n] = p
+    no_decay = ["bias", "LayerNorm.weight"]
+    optimizer_grouped_parameters = [
+        {
+            "params": [
+                p for n, p in params.items() if not any(nd in n for nd in no_decay)
+            ],
+            "weight_decay": opt.WEIGHT_DECAY,
+        },
+        {
+            "params": [p for n, p in params.items() if any(nd in n for nd in no_decay)],
+            "weight_decay": 0.0,
+        },
+    ]
 
-        optim = AdamW(
-            optimizer_grouped_parameters,
-            lr=opt.LR_RATE,
-            eps=opt.EPS,
-        )
+    optim = AdamW(
+        optimizer_grouped_parameters,
+        lr=opt.LR_RATE,
+        eps=opt.EPS,
+    )
 
     num_training_steps = len(train_loader) * opt.EPOCHS
     scheduler = get_linear_schedule_with_warmup(
         optim, num_warmup_steps=0, num_training_steps=num_training_steps
     )
-    # loss_fn = torch.nn.BCELoss()
-    # loss_fct = nn.KLDivLoss(log_target=True)
 
     # strat training
     record_auc = []
@@ -140,22 +130,19 @@ def train_for_epoch(opt, model, train_loader, test_loader):
             # break
             # label = batch["label"].float().cuda().view(-1, 1)
             target = batch["target"].cuda()
-            if opt.MODEL == "pbm":
-                if opt.USE_DEMO:
-                    text = batch["prompt_all_text"]
-                else:
-                    text = batch["test_all_text"]  # without demonstrations
-            elif opt.MODEL == "roberta":
-                text = batch["test_text"]  # without mask templates
+
+            if opt.USE_DEMO:
+                text = batch["prompt_all_text"]
+            else:
+                text = batch["test_all_text"]  # without demonstrations
 
             logits = model(text)
 
-            if opt.MODEL in ["pbm", "roberta"]:
-                loss = bce_for_loss(logits, target)
+            loss = bce_for_loss(logits, target)
             batch_score = compute_score(logits, target)
             scores += batch_score
 
-            print("Epoch:", epoch, "Iteration:", i, loss.item()) #, batch_score)
+            print("Epoch:", epoch, "Iteration:", i, loss.item())  # , batch_score)
             loss.backward()
             optim.step()
             scheduler.step()
@@ -165,7 +152,7 @@ def train_for_epoch(opt, model, train_loader, test_loader):
 
         model.train(False)
         scores /= len(train_loader.dataset)
-        if opt.MODEL == "pbm" and opt.USE_DEMO and opt.MULTI_QUERY:
+        if opt.USE_DEMO and opt.MULTI_QUERY:
             eval_acc, eval_auc = eval_multi_model(opt, model)
         else:
             eval_acc, eval_auc = eval_model(opt, model, test_loader)
@@ -201,13 +188,11 @@ def eval_model(opt, model, test_loader):
             label = batch["label"].float().cuda().view(-1, 1)
             target = batch["target"].cuda()
             # img = batch["img"]
-            if opt.MODEL == "pbm":
-                if opt.USE_DEMO:
-                    text = batch["prompt_all_text"]
-                else:
-                    text = batch["test_all_text"]  # without demonstrations
-            elif opt.MODEL == "roberta":
-                text = batch["test_text"]  # without mask templates
+
+            if opt.USE_DEMO:
+                text = batch["prompt_all_text"]
+            else:
+                text = batch["test_all_text"]  # without demonstrations
 
             logits = model(text)
             batch_score = compute_score(logits, target)
@@ -272,5 +257,4 @@ def eval_multi_model(opt, model):
 
     scores = compute_scaler_score(probs, labels)
     auc = compute_auc_score(logits, labels)
-    # print (auc)
     return scores * 100.0 / len_data, auc * 100.0 / len_data

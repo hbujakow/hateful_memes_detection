@@ -1,33 +1,5 @@
 import os
 
-import torch
-import torch.nn as nn
-
-
-class KLDivergence(nn.Module):
-    def __init__(self):
-        super(KLDivergence, self).__init__()
-
-    def forward(self, prob, logits):
-        # length = (prob.sum(-1) > 0.001).sum()
-        # print (prob.shape,logits.shape)
-        bz, obj = prob.shape
-        length = bz
-        # prob=torch.softmax(prob,-1)
-        # pred_prob = torch.softmax(logits, -1)
-        pred_prob = logits
-        # print (prob.sum(),pred_prob.sum())
-        print(
-            "external:",
-            pred_prob[0],
-            torch.sort(pred_prob[0], dim=0, descending=True)[1][0],
-        )
-        print("visual:", prob[0], torch.sort(prob[0], dim=0, descending=True)[1][0])
-        loss = -prob * torch.log(pred_prob)
-        loss = torch.sum(loss, -1)
-        loss = torch.sum(loss) / length
-        return loss
-
 
 def assert_exits(path):
     assert os.path.exists(path), "Does not exist : {}".format(path)

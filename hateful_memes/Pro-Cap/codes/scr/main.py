@@ -1,13 +1,12 @@
 import os
 import random
 
+import config
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
-
-import config
-import pbm
 from dataset import MultiModalData
+from pbm import PromptHateModel
+from torch.utils.data import DataLoader
 from train import train_for_epoch
 
 
@@ -27,32 +26,21 @@ if __name__ == "__main__":
     torch.cuda.set_device(device)
     set_seed(opt.SEED)
 
-    # Create tokenizer
-    constructor = "build_baseline"
-    if opt.MODEL == "pbm":
-        train_set = MultiModalData(opt, "train")
-        test_set = MultiModalData(opt, "test")
+    train_set = MultiModalData(opt, "train")
+    test_set = MultiModalData(opt, "test")
 
-        max_length = opt.LENGTH + opt.CAP_LENGTH
-        # for one example, default 50
-        # default, meme text, caption plus template
-        """
-        basically, length for one example: meme_text and caption
-        """
-        if opt.ASK_CAP != "":
-            num_ask_cap = len(opt.ASK_CAP.split(","))
-            print("Number of asking captions", num_ask_cap)
-            all_cap_len = opt.CAP_LENGTH * num_ask_cap  # default, 12*5=60
-            max_length += all_cap_len
-        if opt.NUM_MEME_CAP > 0:
-            num_meme_cap = opt.NUM_MEME_CAP
-            max_length += num_meme_cap * opt.CAP_LENGTH  # default, 12*x
-            print("Number of meme aware captions", num_meme_cap)
-        if opt.USE_DEMO:
-            max_length *= opt.NUM_SAMPLE * opt.NUM_LABELS + 1
+    max_length = opt.LENGTH + opt.CAP_LENGTH
+    if opt.ASK_CAP != "":
+        num_ask_cap = len(opt.ASK_CAP.split(","))
+        print("Number of asking captions", num_ask_cap)
+        all_cap_len = opt.CAP_LENGTH * num_ask_cap  # default, 12*5=60
+        max_length += all_cap_len
+    if opt.USE_DEMO:
+        max_length *= opt.NUM_SAMPLE * opt.NUM_LABELS + 1
 
-        label_words = [opt.POS_WORD, opt.NEG_WORD]
-        model = getattr(pbm, constructor)(label_words, max_length).cuda()
+    label_words = [opt.POS_WORD, opt.NEG_WORD]
+
+    model = PromptHateModel(label_words, max_length).cuda()
 
     train_loader = DataLoader(train_set, opt.BATCH_SIZE, shuffle=True, num_workers=2)
     test_loader = DataLoader(test_set, opt.BATCH_SIZE, shuffle=False, num_workers=2)

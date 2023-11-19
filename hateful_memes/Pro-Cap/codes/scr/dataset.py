@@ -4,9 +4,8 @@ import pickle as pkl
 
 import numpy as np
 import torch
-from tqdm import tqdm
-
 import utils
+from tqdm import tqdm
 
 
 def load_pkl(path):
@@ -49,7 +48,6 @@ class MultiModalData:
             self.ask_cap = False
         self.add_ent = self.opt.ADD_ENT
         self.add_dem = self.opt.ADD_DEM
-        self.num_meme_cap = self.opt.NUM_MEME_CAP
         print("Adding exntity information?", self.add_ent)
         print("Adding demographic information?", self.add_dem)
 
@@ -69,7 +67,6 @@ class MultiModalData:
         print("The length of the dataset for:", mode, "is:", len(self.entries))
 
     def load_entries(self, mode):
-        # print ('Loading data from:',self.dataset)
         # only in training mode, in few-shot setting the loading will be different
         path = os.path.join(
             self.opt.DATA, "domain_splits", self.opt.DATASET + "_" + mode + ".json"
@@ -82,9 +79,7 @@ class MultiModalData:
                 self.opt.IMG_VERSION + "_captions.pkl",
             )
         elif self.opt.CAP_TYPE == "vqa":
-            cap_path = os.path.join(
-                self.opt.CAPTION_PATH, mode + "_generic.pkl"
-            )
+            cap_path = os.path.join(self.opt.CAPTION_PATH, mode + "_generic.pkl")
             if self.opt.ASK_CAP != "":
                 questions = self.opt.ASK_CAP.split(",")
                 result_files = {
@@ -121,25 +116,25 @@ class MultiModalData:
                 ext = []
                 person_flag = True
                 animal_flag = True
-                person = result_files["valid_person"]['img/' + row["img"]].lower()
+                person = result_files["valid_person"][row["img"]].lower()
                 if person.startswith("no"):
                     person_flag = False
-                animal = result_files["valid_animal"]['img/' + row["img"]].lower()
+                animal = result_files["valid_animal"][row["img"]].lower()
                 if animal.startswith("no"):
                     animal_flag = False
                 for q in questions:
-                    if person_flag == False and q in [
+                    if not person_flag and q in [
                         "race",
                         "gender",
                         "country",
                         "valid_disable",
                     ]:
                         continue
-                    if animal_flag == False and q == "animal":
+                    if not animal_flag and q == "animal":
                         continue
                     if q in ["valid_person", "valid_animal"]:
                         continue
-                    info = result_files[q]['img/' + row["img"]]
+                    info = result_files[q][row["img"]]
                     if q == "valid_disable":
                         if info.startswith("no"):
                             continue
@@ -147,38 +142,13 @@ class MultiModalData:
                             ext.append("there is a disabled person")
                     else:
                         ext.append(info)
-                        
-                # it wont be executed, not need to worry currently
-                if self.num_meme_cap > 0:
-                    pnp_cap_path = os.path.join(
-                        "../../Ask-Captions/pnp-captions",
-                        self.opt.DATASET,
-                        img + ".json",
-                    )
-                    if os.path.exists(pnp_cap_path):
-                        caps = read_json(pnp_cap_path)
-                        ext.extend(caps[: self.num_meme_cap])
-                    else:
-                        ext.extend([cap] * self.num_meme_cap)
-                # print(ext[-10:])
+
                 ext = " . ".join(ext)
                 cap = cap + " . " + ext
             # no asking captions, no extended captions (Pro-Cap)
             elif self.opt.CAP_TYPE == "vqa":
                 cap = captions[img]
                 ext = []
-                if self.num_meme_cap > 0:
-                    pnp_cap_path = os.path.join(
-                        "../../Ask-Captions/pnp-captions",
-                        self.opt.DATASET,
-                        img + ".json",
-                    )
-                    if os.path.exists(pnp_cap_path):
-                        caps = read_json(pnp_cap_path)
-                        ext.extend(caps[: self.num_meme_cap])
-                    else:
-                        ext.extend([cap] * self.num_meme_cap)
-                # print(ext[-10:])
                 ext = " . ".join(ext)
                 cap = cap + " . " + ext
 
@@ -225,11 +195,7 @@ class MultiModalData:
             # Regression
             counts = {"0": 0, "1": 0}
         selection = []
-        """
-        # Sampling strategy from LM-BFF
-        if self.opt.DEBUG:
-            print ('Number of context examples available:',len(context_examples))
-        """
+
         order = np.random.permutation(len(context_examples))
         for i in order:
             label = context_examples[i]["label"]

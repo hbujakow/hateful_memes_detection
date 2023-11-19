@@ -1,7 +1,7 @@
 # TODO - Refactor -> ja to mogę później ogarnąć
 
 ### Config
- 
+
 Inside the config there are hardcoded paths to the data. (captions)
 
 Despite Pro-Cap captions you need generic captions (there are also inside my folder `/home2/faculty/mgalkowski/memes_analysis/data/hateful_memes/captions`).

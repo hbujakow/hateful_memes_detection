@@ -18,7 +18,6 @@ class PromptHateModel(nn.Module):
                     self.tokenizer.tokenize(" " + word)[0]
                 )
             )
-        print(label_words, self.label_word_list)
 
     def forward_single_cap(self, tokens, attention_mask, mask_pos):
         batch_size = tokens.size(0)
@@ -49,7 +48,6 @@ class PromptHateModel(nn.Module):
         return tokens, attention_mask, mask_pos
 
     def forward(self, all_texts):
-        batch_size = len(all_texts)  #
         tokens, attention_mask, mask_pos = self.generate_input_tokens(
             all_texts, self.max_length
         )
@@ -59,7 +57,3 @@ class PromptHateModel(nn.Module):
             mask_pos.to(self.roberta.device),
         )  # B,2
         return logits
-
-
-def build_baseline(label_words, max_length):
-    return PromptHateModel(label_words, max_length)
