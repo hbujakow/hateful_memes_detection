@@ -2,7 +2,7 @@ import uvicorn
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-# TODO - LOAD OCR MODEL
+# TODO - LOAD INPAINTING MODEL
 model = ...
 
 app = FastAPI()
@@ -14,19 +14,20 @@ class InputData(BaseModel):
     ...
 
 
-@app.post("/extract_text")
+@app.post("/inpaint")
 async def predict(data: InputData):
     # TODO - IMPLEMENT THIS ENDPOINT
+    # MAYBE IMAGE NEED TO BE ENCODED IN BASE64 FOR TRANSMISSION
     try:
         features = ...
 
-        text = model.predict(features)
+        image = model.predict(features)
 
-        return {"text": text}
+        return {"image": image}
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="127.0.0.1", port=9000)

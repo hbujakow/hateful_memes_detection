@@ -1,4 +1,4 @@
-# Inpainting microservice
+# OCR microservice
 
 ### Setup
 
