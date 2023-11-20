@@ -1,10 +1,12 @@
+# FROM https://github.com/nipponjo/deepfillv2-pytorch/blob/master/model/networks.py
+
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-# from torch.nn.utils.parametrizations import spectral_norm
 
 # ----------------------------------------------------------------------------
+
 
 def _init_conv_layer(conv, activation, mode='fan_out'):
     if isinstance(activation, nn.LeakyReLU):
@@ -32,6 +34,7 @@ def output_to_image(out):
 #################################
 ########### GENERATOR ###########
 #################################
+
 
 class GConv(nn.Module):
     """Implements the gated 2D convolution introduced in 
@@ -70,9 +73,10 @@ class GConv(nn.Module):
         Args:
 
         """
-        if not self.gated: return self.conv(x)
+        if not self.gated:
+            return self.conv(x)
 
-        x = self.conv(x)        
+        x = self.conv(x)
         x, y = torch.split(x, self.cnum_out, dim=1)
         x = self.activation(x)
         y = torch.sigmoid(y)
@@ -82,10 +86,11 @@ class GConv(nn.Module):
 
 # ----------------------------------------------------------------------------
 
+
 class GDeConv(nn.Module):
     """Upsampling (x2) followed by convolution"""
 
-    def __init__(self, cnum_in, cnum_out, padding=1):        
+    def __init__(self, cnum_in, cnum_out, padding=1):
         super().__init__()
 
         self.conv = GConv(cnum_in, cnum_out, ksize=3, stride=1,
@@ -98,6 +103,7 @@ class GDeConv(nn.Module):
         return x
 
 # ----------------------------------------------------------------------------
+
 
 class GDownsamplingBlock(nn.Module):
     """Strided convolution (s=2) followed by convolution (s=1)"""
@@ -115,6 +121,7 @@ class GDownsamplingBlock(nn.Module):
         return x
 
 # ----------------------------------------------------------------------------
+
 
 class GUpsamplingBlock(nn.Module):
     """Upsampling (x2) followed by two convolutions"""
@@ -159,7 +166,7 @@ class CoarseGenerator(nn.Module):
         self.up_block2 = GUpsamplingBlock(cnum, cnum//4, cnum_hidden=cnum//2)
 
         # to RGB
-        self.conv_to_rgb = GConv(cnum//4, cnum_out, ksize=3, stride=1, 
+        self.conv_to_rgb = GConv(cnum//4, cnum_out, ksize=3, stride=1,
                                  activation=None, gated=False)
         self.tanh = nn.Tanh()
 
@@ -190,6 +197,7 @@ class CoarseGenerator(nn.Module):
 
 # ----------------------------------------------------------------------------
 
+
 class FineGenerator(nn.Module):
     """Two Branch Refinement Network with Contextual Attention (Stage II)"""
 
@@ -210,13 +218,15 @@ class FineGenerator(nn.Module):
         self.conv_conv_bn2 = GConv(2*cnum, 2*cnum, ksize=3, rate=2, padding=2)
         self.conv_conv_bn3 = GConv(2*cnum, 2*cnum, ksize=3, rate=4, padding=4)
         self.conv_conv_bn4 = GConv(2*cnum, 2*cnum, ksize=3, rate=8, padding=8)
-        self.conv_conv_bn5 = GConv(2*cnum, 2*cnum, ksize=3, rate=16, padding=16)
+        self.conv_conv_bn5 = GConv(
+            2*cnum, 2*cnum, ksize=3, rate=16, padding=16)
 
         ### ATTENTION BRANCH (B2) ###
         self.ca_conv1 = GConv(cnum_in, cnum//2, 5, 1, padding=2)
 
         # downsampling
-        self.ca_down_block1 = GDownsamplingBlock(cnum//2, cnum, cnum_hidden=cnum//2)
+        self.ca_down_block1 = GDownsamplingBlock(
+            cnum//2, cnum, cnum_hidden=cnum//2)
         self.ca_down_block2 = GDownsamplingBlock(cnum, 2*cnum)
 
         # bottleneck
@@ -242,7 +252,7 @@ class FineGenerator(nn.Module):
         self.up_block2 = GUpsamplingBlock(cnum, cnum//4, cnum_hidden=cnum//2)
 
         # to RGB
-        self.conv_to_rgb = GConv(cnum//4, cnum_out, ksize=3, stride=1, 
+        self.conv_to_rgb = GConv(cnum//4, cnum_out, ksize=3, stride=1,
                                  activation=None, gated=False)
         self.tanh = nn.Tanh()
 
@@ -295,14 +305,15 @@ class FineGenerator(nn.Module):
 
 # ----------------------------------------------------------------------------
 
+
 class Generator(nn.Module):
     """Inpainting network consisting of a coarse and a refinement network. 
     Described in the paper 
     `Free-Form Image Inpainting with Gated Convolution, Yu et. al`.
     """
 
-    def __init__(self, cnum_in=5, cnum_out=3, cnum=48, 
-                 return_flow=False, checkpoint=None, device = 'cpu'):
+    def __init__(self, cnum_in=5, cnum_out=3, cnum=48,
+                 return_flow=False, checkpoint=None, device='cpu'):
         super().__init__()
 
         self.stage1 = CoarseGenerator(cnum_in, cnum_out, cnum)
@@ -312,7 +323,8 @@ class Generator(nn.Module):
         self.device = device
 
         if checkpoint is not None:
-            generator_state_dict = torch.load(checkpoint, map_location=torch.device(device))['G']
+            generator_state_dict = torch.load(
+                checkpoint, map_location=torch.device(device))['G']
             self.load_state_dict(generator_state_dict, strict=True)
 
         self.eval()
@@ -353,7 +365,8 @@ class Generator(nn.Module):
         grid = 8
 
         image = image[None, :self.cnum_in, :h//grid*grid, :w//grid*grid]
-        mask = mask[None, :3, :h//grid*grid, :w//grid*grid].sum(1, keepdim=True)
+        mask = mask[None, :3, :h//grid*grid,
+                    :w//grid*grid].sum(1, keepdim=True)
 
         image = (image*2 - 1.)  # map image values to [-1, 1] range
         # 1.: masked 0.: unmasked
@@ -364,7 +377,7 @@ class Generator(nn.Module):
         ones_x = torch.ones_like(image_masked)[:, :1]  # sketch channel
         x = torch.cat([image_masked, ones_x, ones_x*mask],
                       dim=1)  # concatenate channels
-        
+
         if self.return_flow:
             x_stage1, x_stage2, offset_flow = self.forward(x, mask)
         else:
@@ -396,9 +409,11 @@ class Generator(nn.Module):
 ####### CONTEXTUAL ATTENTION #######
 ####################################
 
+
 """
 adapted from: https://github.com/daa233/generative-inpainting-pytorch/blob/master/model/networks.py
 """
+
 
 class ContextualAttention(nn.Module):
     """ Contextual attention layer implementation. 
@@ -420,7 +435,7 @@ class ContextualAttention(nn.Module):
                  n_down=2,
                  fuse=False,
                  return_flow=False,
-                 device_ids=None):        
+                 device_ids=None):
         super().__init__()
 
         self.ksize = ksize
@@ -516,7 +531,8 @@ class ContextualAttention(nn.Module):
                                 1, 2, 3], keepdim=True)).clamp_min(1e-4)
             wi_normed = wi / max_wi
             # xi shape: [1, C, H, W], yi shape: [1, L, H, W]
-            yi = F.conv2d(xi, wi_normed, stride=1, padding=(self.ksize-1)//2) # [1, L, H, W]
+            yi = F.conv2d(xi, wi_normed, stride=1, padding=(
+                self.ksize-1)//2)  # [1, L, H, W]
             # conv implementation for fuse scores to encourage large patches
             if self.fuse:
                 # make all of depth to spatial resolution
@@ -592,6 +608,7 @@ class ContextualAttention(nn.Module):
 
 # ----------------------------------------------------------------------------
 
+
 def flow_to_image(flow):
     """Transfer flow map to image.
     Part of code forked from flownet.
@@ -622,6 +639,7 @@ def flow_to_image(flow):
 
 # ----------------------------------------------------------------------------
 
+
 def compute_color(u, v):
     h, w = u.shape
     img = np.zeros([h, w, 3])
@@ -651,6 +669,7 @@ def compute_color(u, v):
     return img
 
 # ----------------------------------------------------------------------------
+
 
 def make_color_wheel():
     RY, YG, GC, CB, BM, MR = (15, 6, 4, 11, 13, 6)
@@ -711,16 +730,17 @@ def extract_image_patches(images, ksize, stride, rate, padding='auto'):
 ######### DISCRIMINATOR #########
 #################################
 
+
 class Conv2DSpectralNorm(nn.Conv2d):
     """Convolution layer that applies Spectral Normalization before every call."""
 
-    def __init__(self, cnum_in, cnum_out, 
+    def __init__(self, cnum_in, cnum_out,
                  kernel_size, stride, padding=0, bias=True,
                  n_iter=1, eps=1e-12):
         super().__init__(cnum_in,
                          cnum_out, kernel_size=kernel_size,
                          stride=stride, padding=padding, bias=bias)
-        
+
         self.register_buffer("weight_u", torch.empty(self.weight.size(0), 1))
         nn.init.trunc_normal_(self.weight_u)
         self.n_iter = n_iter
@@ -746,17 +766,18 @@ class Conv2DSpectralNorm(nn.Conv2d):
 
 # ----------------------------------------------------------------------------
 
+
 class DConv(nn.Module):
     """Spectral-Normalized convolution followed by a LeakyReLU activation"""
 
-    def __init__(self, cnum_in, cnum_out, 
+    def __init__(self, cnum_in, cnum_out,
                  ksize=5, stride=2, padding='auto'):
         super().__init__()
 
         padding = (ksize-1)//2 if padding == 'auto' else padding
         self.conv_sn = Conv2DSpectralNorm(
             cnum_in, cnum_out, ksize, stride, padding)
-        #self.conv_sn = spectral_norm(nn.Conv2d(cnum_in, cnum_out, ksize, stride, padding))
+        # self.conv_sn = spectral_norm(nn.Conv2d(cnum_in, cnum_out, ksize, stride, padding))
         self.leaky = nn.LeakyReLU(negative_slope=0.2)
 
     def forward(self, x):
@@ -766,13 +787,14 @@ class DConv(nn.Module):
 
 # ----------------------------------------------------------------------------
 
+
 class Discriminator(nn.Module):
     """Fully Convolutional Spectral-Normalized Markovian Discriminator
     from the paper `Free-Form Image Inpainting with Gated Convolution, Yu et. al`."""
 
     def __init__(self, cnum_in, cnum):
         super().__init__()
-        
+
         self.conv1 = DConv(cnum_in, cnum)
         self.conv2 = DConv(cnum, 2*cnum)
         self.conv3 = DConv(2*cnum, 4*cnum)
