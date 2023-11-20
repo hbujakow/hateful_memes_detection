@@ -171,7 +171,7 @@ class MultiModalData:
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def prepare_exp(self):
-        ###add sampling
+        # add sampling
         support_indices = list(range(len(self.support_examples)))
         self.example_idx = []
         for sample_idx in tqdm(range(self.num_sample)):

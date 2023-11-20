@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 
 def assert_exits(path):
     assert os.path.exists(path), "Does not exist : {}".format(path)

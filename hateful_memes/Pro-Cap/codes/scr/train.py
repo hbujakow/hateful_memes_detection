@@ -79,8 +79,9 @@ def train_for_epoch(opt, model, train_loader, test_loader):
             if "encoder.layer" in n:
                 try:
                     layer_num = int(n[n.find("encoder.layer") + 14 :].split(".")[0])
-                except:
+                except Exception as e:
                     print(n)
+                    print(e)
                     raise Exception("")
                 if layer_num >= opt.FIX_LAYERS:
                     print("yes", n)
