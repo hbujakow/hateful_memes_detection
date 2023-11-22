@@ -175,6 +175,8 @@ def train_for_epoch(opt, model, train_loader, test_loader):
         "\tevaluation auc: %.2f, accuracy: %.2f"
         % (record_auc[max_idx], record_acc[max_idx])
     )
+    if opt.SAVE:
+        torch.save(model.state_dict(), os.path.join(model_path, str(opt.SAVE_NUM) + ".pth"))
 
 
 def eval_model(opt, model, test_loader):
