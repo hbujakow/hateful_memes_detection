@@ -92,5 +92,19 @@ async def predict(image: InputData):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/generic_caption")
+async def generate_generic_caption(image: InputData):
+    im = Image.open(BytesIO(base64.b64decode((image.image))))
+
+    try:
+        generic_caption = generate_prompt_result(
+            model, vis_processors, device, im, "describe briefly what is in the image"
+        )
+
+        return {"generic_caption": generic_caption}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8088)
