@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     label_words = [opt.POS_WORD, opt.NEG_WORD]
 
-    model = PromptHateModel(label_words, max_length).cuda()
+    model = PromptHateModel(label_words, max_length, model_name=opt.MODEL_NAME).cuda()
 
     train_loader = DataLoader(train_set, opt.BATCH_SIZE, shuffle=True, num_workers=2)
     test_loader = DataLoader(test_set, opt.BATCH_SIZE, shuffle=False, num_workers=2)
