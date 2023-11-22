@@ -5,6 +5,7 @@ def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument("--DATASET", type=str, default="mem")
     parser.add_argument("--CAP_TYPE", type=str, default="vqa")
+    parser.add_argument("--MODEL_NAME", type=str, default="roberta-large")
 
     parser.add_argument(
         "--DATA",
