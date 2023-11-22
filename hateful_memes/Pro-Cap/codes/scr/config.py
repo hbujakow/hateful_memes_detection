@@ -53,7 +53,7 @@ def parse_opt():
     parser.add_argument("--ADD_DEM", type=bool, default=False)
 
     parser.add_argument("--DEBUG", type=bool, default=False)
-    parser.add_argument("--SAVE", type=bool, default=False)
+    parser.add_argument("--SAVE", type=bool, default=True)
     parser.add_argument("--SAVE_NUM", type=int, default=100)
     parser.add_argument("--EPOCHS", type=int, default=10)
 
