@@ -63,7 +63,7 @@ def train_for_epoch(opt, model, train_loader, test_loader):
     if not os.path.exists(log_path):
         os.mkdir(log_path)
 
-    logger = utils.Logger(os.path.join(log_path, str(opt.SAVE_NUM) + ".txt"))
+    logger = utils.Logger(os.path.join(log_path, opt.SAVE_NUM + ".txt"))
     log_hyperpara(logger, opt)
 
     logger.write(
@@ -176,7 +176,7 @@ def train_for_epoch(opt, model, train_loader, test_loader):
         % (record_auc[max_idx], record_acc[max_idx])
     )
     if opt.SAVE:
-        torch.save(model.state_dict(), os.path.join(model_path, str(opt.SAVE_NUM) + ".pth"))
+        torch.save(model.state_dict(), os.path.join(model_path, opt.SAVE_NUM + ".pth"))
 
 
 def eval_model(opt, model, test_loader):
