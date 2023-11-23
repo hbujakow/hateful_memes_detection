@@ -37,10 +37,10 @@ def inpaint_image(image_path, extract_text = False):
 
     if response.status_code == 200:
         result = response.json()
-        image = Image.open(BytesIO(base64.b64decode((result["inpainted_image"]))))
+        image = Image.open(BytesIO(base64.b64decode((result["image"]))))
         text = result["text"]
 
-        return image, text if extract_text else image
+        return (image, text) if extract_text else image
     else:
         return f"Error: {response.status_code} - {response.text}"
 ```
