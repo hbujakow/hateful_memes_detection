@@ -19,8 +19,13 @@ uvicorn app:app --reload --port 8089 --host 0.0.0.0
 ```python
 import requests
 import base64
+from io import BytesIO
+from PIL import Image
 
-def inpaint_image(image_path):
+def inpaint_image(image_path, extract_text = False):
+    """
+    Inpaints the image. Optionally, returns the text extracted from image with OCR.
+    """
     with open(image_path, 'rb') as image_binary:
         encoded_image = base64.b64encode(image_binary.read()).decode('utf-8')
 
@@ -32,7 +37,10 @@ def inpaint_image(image_path):
 
     if response.status_code == 200:
         result = response.json()
-        return result["inpainted_image"], result["text"]
+        image = Image.open(BytesIO(base64.b64decode((result["inpainted_image"]))))
+        text = result["text"]
+
+        return image, text if extract_text else image
     else:
         return f"Error: {response.status_code} - {response.text}"
 ```
