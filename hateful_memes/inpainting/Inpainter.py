@@ -56,7 +56,6 @@ class ImageConverter:
             all_text.append(text[0][1])
 
         self.text = ' '.join(all_text)
-
         return res
 
     def create_mask(self):
@@ -72,10 +71,8 @@ class ImageConverter:
         ocr_result = self.reader.readtext(np.array(self.image))
         img_pil = self.image.convert('RGB')
         mask = self.create_bounding_boxes(ocr_result)
-
         img = T.ToTensor()(img_pil).to(self.device)
         mask = T.ToTensor()(mask).to(self.device)
-
         inpainted_img = generator.infer(img, mask, return_vals=['inpainted'])
 
         return Image.fromarray(inpainted_img)
