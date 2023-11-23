@@ -20,7 +20,12 @@ def parse_opt():
     parser.add_argument(
         "--LOG_PATH",
         type=str,
-        default="/home2/faculty/mgalkowski/memes_analysis/hateful_memes/Pro-Cap/logs",
+        default="/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/logs",
+    )
+    parser.add_argument(
+        "--MODEL_PATH",
+        type=str,
+        default="/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/models",
     )
 
     parser.add_argument("--NUM_LABELS", type=int, default=2)
@@ -47,7 +52,6 @@ def parse_opt():
     )
     parser.add_argument("--CAP_LENGTH", type=int, default=12)
 
-    # optional: allenai/unifiedqa-t5-base allenai/unifiedqa-t5-large allenai/unifiedqa-t5-3b
     parser.add_argument("--PRETRAIN_DATA", type=str, default="conceptual")
     parser.add_argument("--IMG_VERSION", type=str, default="clean")
     parser.add_argument("--ADD_ENT", type=bool, default=False)

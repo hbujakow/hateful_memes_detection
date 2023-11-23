@@ -53,7 +53,7 @@ def train_for_epoch(opt, model, train_loader, test_loader):
     # initialization of saving path
     if opt.SAVE:
         model_path = os.path.join(
-            "../models", "_".join(["pbm", str(opt.SEED), opt.DATASET])
+            opt.MODEL_PATH, "_".join([str(opt.SEED), opt.DATASET])
         )
         if not os.path.exists(model_path):
             os.mkdir(model_path)
