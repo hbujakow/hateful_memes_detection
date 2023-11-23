@@ -16,6 +16,7 @@
 ```
 
 `model` dir contains the logic of the model inpainting the images - [source](https://github.com/nipponjo/deepfillv2-pytorch/blob/master/model/networks.py).
+
 `pretrained` dir contains the instruction on where to get the pretrained model weights from.
 
 
