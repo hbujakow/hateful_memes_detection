@@ -8,6 +8,7 @@ from PIL import Image
 import numpy as np
 
 app = FastAPI()
+img_converter = ImageConverter()
 
 
 class InputData(BaseModel):
@@ -18,15 +19,15 @@ class InputData(BaseModel):
 @app.post("/inpaint")
 async def predict(image: InputData):
     im = Image.open(BytesIO(base64.b64decode((image.image))))
-    model = ImageConverter(image = im)
+    img_converter.upload_img(image = im)
     try:
-        inpainted_image = model.inpaint_image()
+        inpainted_image = img_converter.inpaint_image()
         buffered = BytesIO()
         inpainted_image.save(buffered, format="PNG")
         image_bytes = buffered.getvalue()
         encoded_image = base64.b64encode(image_bytes).decode('utf-8')
 
-        text = model.retrieve_text()
+        text = img_converter.retrieve_text()
         return {"image": encoded_image, "text": text}
 
     except Exception as e:

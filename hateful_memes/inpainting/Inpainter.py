@@ -12,20 +12,20 @@ import argparse
 from model.networks import Generator
 
 DATAPATH = Path(__file__).resolve().parent.parent / 'data'
-MODELPATH = 'pretrained/states_pt_places2.pth'
+plt.rcParams['figure.facecolor'] = 'white'
 
 class ImageConverter:
 
-    def __init__(self, image=None, image_path=None, device=None):
+    def __init__(self, model_path = Path(__file__).resolve().parent / 'pretrained' / 'states_pt_places2.pth', device = None):
         if device is None:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         else:
             self.device = device
-
-        plt.rcParams['figure.facecolor'] = 'white'
+        self.inpainting_model = Generator(checkpoint = model_path, return_flow=True, device = self.device).to(self.device)
         self.reader = easyocr.Reader(['en'])
+
+    def upload_img(self, image=None, image_path=None):
         self.text = None
-        self.inpainting_model = Generator(checkpoint = MODELPATH, return_flow=True, device = self.device).to(self.device)
 
         if image is not None:
             self.image = image
@@ -77,7 +77,6 @@ class ImageConverter:
         inpainted_img = self.inpainting_model.infer(img, mask, return_vals=['inpainted'])
 
         return Image.fromarray(inpainted_img)
-
 
 
 def generate_inpainted_images(img_dir, inpainted_img_dir, device=None):
