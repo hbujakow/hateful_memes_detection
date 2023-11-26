@@ -45,7 +45,7 @@ class InputData(BaseModel):
 @app.post("/generate_captions")
 async def predict(image: InputData):
     im = Image.open(BytesIO(base64.b64decode((image.image))))
-    print("image size", im.size)
+
     captions = {}
     try:
         person_on_img = generate_prompt_result(
@@ -105,6 +105,7 @@ async def generate_generic_caption(image: InputData):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8088)

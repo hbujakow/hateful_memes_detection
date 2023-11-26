@@ -3,6 +3,7 @@
 ### Setup
 
 1. Create environment and install dependencies
+
 ```bash
 conda create -n captions python=3.10
 conda activate captions
@@ -10,6 +11,7 @@ conda env update --file environment.yaml
 ```
 
 2. Run the server
+
 ```bash
 uvicorn app:app --reload --port 8088 --host 0.0.0.0
 ```
