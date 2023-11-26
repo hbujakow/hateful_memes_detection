@@ -12,6 +12,7 @@ import argparse
 from model.networks import Generator
 
 DATAPATH = Path(__file__).resolve().parent.parent / 'data'
+MODELPATH = 'pretrained/states_pt_places2.pth'
 
 class ImageConverter:
 
@@ -24,6 +25,7 @@ class ImageConverter:
         plt.rcParams['figure.facecolor'] = 'white'
         self.reader = easyocr.Reader(['en'])
         self.text = None
+        self.inpainting_model = Generator(checkpoint = MODELPATH, return_flow=True, device = self.device).to(self.device)
 
         if image is not None:
             self.image = image
@@ -65,15 +67,14 @@ class ImageConverter:
         return image_mask
 
 
-    def inpaint_image(self, model_path = 'pretrained/states_pt_places2.pth'):
+    def inpaint_image(self):
         print("Inpainting image...")
-        generator = Generator(checkpoint=model_path, return_flow=True, device = self.device).to(self.device)
         ocr_result = self.reader.readtext(np.array(self.image))
         img_pil = self.image.convert('RGB')
         mask = self.create_bounding_boxes(ocr_result)
         img = T.ToTensor()(img_pil).to(self.device)
         mask = T.ToTensor()(mask).to(self.device)
-        inpainted_img = generator.infer(img, mask, return_vals=['inpainted'])
+        inpainted_img = self.inpainting_model.infer(img, mask, return_vals=['inpainted'])
 
         return Image.fromarray(inpainted_img)
 

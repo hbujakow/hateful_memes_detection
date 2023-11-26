@@ -47,6 +47,8 @@ import base64
 from io import BytesIO
 from PIL import Image
 
+API_URL = "http://127.0.0.1:8089/inpaint"
+
 def inpaint_image(image_path, extract_text = False):
     """
     Inpaints the image. Optionally, returns the text extracted from image with OCR.
@@ -54,11 +56,9 @@ def inpaint_image(image_path, extract_text = False):
     with open(image_path, 'rb') as image_binary:
         encoded_image = base64.b64encode(image_binary.read()).decode('utf-8')
 
-    api_url = "http://127.0.0.1:8089/inpaint"
-
     payload = {"image": encoded_image}
 
-    response = requests.post(api_url, json=payload)
+    response = requests.post(API_URL, json=payload)
 
     if response.status_code == 200:
         result = response.json()
