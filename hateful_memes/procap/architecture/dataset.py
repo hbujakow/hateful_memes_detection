@@ -116,10 +116,10 @@ class MultiModalData:
                 ext = []
                 person_flag = True
                 animal_flag = True
-                person = result_files["valid_person"]['img/' + row["img"]].lower()
+                person = result_files["valid_person"]["img/" + row["img"]].lower()
                 if person.startswith("no"):
                     person_flag = False
-                animal = result_files["valid_animal"]['img/' + row["img"]].lower()
+                animal = result_files["valid_animal"]["img/" + row["img"]].lower()
                 if animal.startswith("no"):
                     animal_flag = False
                 for q in questions:
@@ -134,7 +134,7 @@ class MultiModalData:
                         continue
                     if q in ["valid_person", "valid_animal"]:
                         continue
-                    info = result_files[q]['img/' + row["img"]]
+                    info = result_files[q]["img/" + row["img"]]
                     if q == "valid_disable":
                         if info.startswith("no"):
                             continue

@@ -4,7 +4,9 @@ from transformers import RobertaForMaskedLM, RobertaTokenizer
 
 
 class PromptHateModel(nn.Module):
-    def __init__(self, label_words=["good", "bad"], max_length=320, model_name="roberta-large"):
+    def __init__(
+        self, label_words=["good", "bad"], max_length=320, model_name="roberta-large"
+    ):
         super(PromptHateModel, self).__init__()
         self.roberta = RobertaForMaskedLM.from_pretrained(model_name)
         self.tokenizer = RobertaTokenizer.from_pretrained(model_name)
