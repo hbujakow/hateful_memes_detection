@@ -1,11 +1,12 @@
 import base64
 from io import BytesIO
+
 import uvicorn
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from Inpainter import ImageConverter
 from PIL import Image
-import numpy as np
+from pydantic import BaseModel
+
+from Inpainter import ImageConverter
 
 app = FastAPI()
 img_converter = ImageConverter()
@@ -13,6 +14,7 @@ img_converter = ImageConverter()
 
 class InputData(BaseModel):
     """Data model for input data to API"""
+
     image: str
 
 
@@ -25,7 +27,7 @@ async def predict(image: InputData):
         buffered = BytesIO()
         inpainted_image.save(buffered, format="PNG")
         image_bytes = buffered.getvalue()
-        encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+        encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
         text = img_converter.retrieve_text()
         return {"image": encoded_image, "text": text}
@@ -35,4 +37,4 @@ async def predict(image: InputData):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=9000)
+    uvicorn.run(app, host="0.0.0.0", port=8089)
