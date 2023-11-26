@@ -3,10 +3,9 @@ from io import BytesIO
 
 import uvicorn
 from fastapi import FastAPI, HTTPException
+from Inpainter import ImageConverter
 from PIL import Image
 from pydantic import BaseModel
-
-from Inpainter import ImageConverter
 
 app = FastAPI()
 img_converter = ImageConverter()
@@ -21,7 +20,7 @@ class InputData(BaseModel):
 @app.post("/inpaint")
 async def predict(image: InputData):
     im = Image.open(BytesIO(base64.b64decode((image.image))))
-    img_converter.upload_img(image = im)
+    img_converter.upload_img(image=im)
     try:
         inpainted_image = img_converter.inpaint_image()
         buffered = BytesIO()

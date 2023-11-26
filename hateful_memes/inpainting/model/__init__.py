@@ -1,7 +1,6 @@
 # FROM https://github.com/nipponjo/deepfillv2-pytorch/blob/master/model/__init__.py
 
 import torch
-
 from model.networks import Generator
 
 

@@ -23,11 +23,10 @@ This microservice serves the purpose of inpainting the meme image (i.e. removing
 
 `pretrained` dir contains the instruction on where to get the pretrained model weights from.
 
-
-
 ### Setup
 
 1. Create environment and install dependencies
+
 ```bash
 conda create -n inpainting python=3.10
 conda activate inpainting
@@ -35,6 +34,7 @@ conda env update --file environment.yaml
 ```
 
 2. Run the server
+
 ```bash
 uvicorn app:app --reload --port 8089 --host 0.0.0.0
 ```
