@@ -1,5 +1,6 @@
 import sys
-sys.path.append('../')
+
+sys.path.append("../")
 
 import torch
 import torch.nn.functional as F
@@ -7,7 +8,6 @@ import uvicorn
 from architecture.pbm import PromptHateModel
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-
 
 label_words = ["good", "bad"]
 max_length = 447
