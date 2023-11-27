@@ -11,7 +11,20 @@ PROCAP_API_URL = "http://127.0.0.1:8087/predict"
 CAPTION_API_URL = "http://127.0.0.1:8088/generate_captions"
 INPAINT_API_URL = "http://127.0.0.1:8089/inpaint"
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout='wide', page_title='Meme hatefulness classifier',
+                   page_icon='🤔', initial_sidebar_state='collapsed')
+
+st.markdown("""
+    <style>
+        .reportview-container {
+            margin-top: -2em;
+        }
+        #MainMenu {visibility: hidden;}
+        .stDeployButton {display:none;}
+        footer {visibility: hidden;}
+        #stDecoration {display:none;}
+    </style>
+""", unsafe_allow_html=True)
 
 buffered = BytesIO()
 
@@ -44,6 +57,9 @@ def call_inpaint_image_api(image, extract_text=True):
 
 
 def call_caption_api(inpainted_image):
+    """
+    Generates captions for the inpainted image.
+    """
     inpainted_image.save("inpainted_image.png")
     with open("inpainted_image.png", "rb") as inpainted_image:
         encoded_image = base64.b64encode(inpainted_image.read()).decode("utf-8")
@@ -62,6 +78,9 @@ def call_caption_api(inpainted_image):
 
 
 def call_procap_api(caption):
+    """
+    Classifies the caption as harmful or not.
+    """
     payload = {"text": caption}
 
     try:
