@@ -11,10 +11,15 @@ PROCAP_API_URL = "http://127.0.0.1:8087/predict"
 CAPTION_API_URL = "http://127.0.0.1:8088/generate_captions"
 INPAINT_API_URL = "http://127.0.0.1:8089/inpaint"
 
-st.set_page_config(layout='wide', page_title='Meme hatefulness classifier',
-                   page_icon='🤔', initial_sidebar_state='collapsed')
+st.set_page_config(
+    layout="wide",
+    page_title="Meme hatefulness classifier",
+    page_icon="🤔",
+    initial_sidebar_state="collapsed",
+)
 
-st.markdown("""
+st.markdown(
+    """
     <style>
         .reportview-container {
             margin-top: -2em;
@@ -24,7 +29,9 @@ st.markdown("""
         footer {visibility: hidden;}
         #stDecoration {display:none;}
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 buffered = BytesIO()
 
@@ -33,12 +40,12 @@ def call_inpaint_image_api(image, extract_text=True):
     """
     Inpaints the image. Optionally, returns the text extracted from image with OCR.
     """
-    image.save("image.png")
-    with open("image.png", "rb") as f:
+    image.save("temp_img.png")
+    with open("temp_img.png", "rb") as f:
         encoded_image = base64.b64encode(f.read()).decode("utf-8")
 
     payload = {"image": encoded_image}
-    os.remove("image.png")
+    os.remove("temp_img.png")
 
     try:
         response = requests.post(INPAINT_API_URL, json=payload)
@@ -60,12 +67,12 @@ def call_caption_api(inpainted_image):
     """
     Generates captions for the inpainted image.
     """
-    inpainted_image.save("inpainted_image.png")
-    with open("inpainted_image.png", "rb") as inpainted_image:
+    inpainted_image.save("inpainted_temp_img.png")
+    with open("inpainted_temp_img.png", "rb") as inpainted_image:
         encoded_image = base64.b64encode(inpainted_image.read()).decode("utf-8")
 
     payload = {"image": encoded_image}
-    os.remove("inpainted_image.png")
+    os.remove("inpainted_temp_img.png")
     try:
         response = requests.post(CAPTION_API_URL, json=payload)
     except Exception as e:
@@ -96,45 +103,52 @@ def call_procap_api(caption):
 
 def main():
     st.title("Detecting harmful and offensive content in memes")
-    st.write("Upload a meme image file for classification")
 
-    # Upload jpg data
-    uploaded_file = st.file_uploader("Upload meme image", type=["png", "jpg"])
+    uploaded_file = st.file_uploader(
+        "Upload a meme image file for classification", type=["png", "jpg"]
+    )
 
-    if uploaded_file is not None:
+    if uploaded_file:
+        col1, col2 = st.columns([1, 2])
         start = time.time()
+
         meme_image = Image.open(uploaded_file)
-        st.write("Meme to analyze:")
-        st.image(meme_image)
+        col1.markdown("#### Uploaded meme:")
+        col1.image(meme_image, use_column_width=True)
 
-        # Data preprocessing
-        st.header("Preprocessing the image")
+        with st.spinner("Inpainting image..."):
+            inpainted_results = call_inpaint_image_api(meme_image)
+        col1.write("Inpainting complete.")
 
-        # call all apis, firstly inpaint, then caption then procap
-        inpainted_results = call_inpaint_image_api(meme_image)
         inpainted_image = inpainted_results["image"]
         text = inpainted_results["text"]
-        st.write(f"Extracted text: {text}")
 
-        st.write("Inpainting complete.")
-        st.image(inpainted_image)
+        with st.spinner("Generating captions..."):
+            caption = call_caption_api(inpainted_image)
+        col1.write("Captioning complete.")
 
-        caption = call_caption_api(inpainted_image)
-        st.write("Captioning complete.")
+        with st.spinner("Classifying meme..."):
+            procap_results = call_procap_api(input_text)
+
+        col1.write("Classifying complete.")
+
+        col2.markdown("#### Results:")
+
+        col2.markdown("Extracted text:")
+        col2.markdown(f"```\n{text}\n```")
 
         input_text = text + " . " + "It was <mask>" + " . " + caption + " . </s>"
-        st.write("Text to be analyzed:")
-        st.write(input_text)
 
-        procap_results = call_procap_api(input_text)
-        st.write("Procap complete.")
-        st.write("Results:")
-        st.write(procap_results["prediction"])
-        st.write(procap_results["probability"])
+        col2.markdown("Text to be analyzed:")
+        col2.markdown(f"```\n{input_text}\n```")
 
-        st.write("Model inference complete.")
+        col2.write("##### Classification:")
+
+        col2.markdown(procap_results["prediction"])
+        col2.write(f"with propability: {procap_results['probability']}")
+
         time_taken = time.time() - start
-        st.write(f"Time taken: {time_taken} seconds")
+        col1.write(f"Time taken: {round(time_taken, 2)} seconds")
 
 
 if __name__ == "__main__":
