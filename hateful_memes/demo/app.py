@@ -127,6 +127,8 @@ def main():
             caption = call_caption_api(inpainted_image)
         col1.write("Captioning complete.")
 
+        input_text = text + " . " + "It was <mask>" + " . " + caption + " . </s>"
+
         with st.spinner("Classifying meme..."):
             procap_results = call_procap_api(input_text)
 
@@ -137,15 +139,14 @@ def main():
         col2.markdown("Extracted text:")
         col2.markdown(f"```\n{text}\n```")
 
-        input_text = text + " . " + "It was <mask>" + " . " + caption + " . </s>"
-
         col2.markdown("Text to be analyzed:")
         col2.markdown(f"```\n{input_text}\n```")
 
         col2.write("##### Classification:")
 
-        col2.markdown(procap_results["prediction"])
-        col2.write(f"with propability: {procap_results['probability']}")
+        result = "Hateful" if procap_results["prediction"] == 1 else "Not hateful"
+        col2.markdown(result)
+        col2.write(f"with probability: {procap_results['probability']}")
 
         time_taken = time.time() - start
         col1.write(f"Time taken: {round(time_taken, 2)} seconds")
