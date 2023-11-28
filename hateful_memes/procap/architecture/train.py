@@ -132,7 +132,7 @@ def train_for_epoch(opt, model, train_loader, test_loader):
             optim, num_warmup_steps=0, num_training_steps=num_training_steps
         )
 
-        # strat training
+        # start training
         record_auc = []
         record_acc = []
         for epoch in range(opt.EPOCHS):
