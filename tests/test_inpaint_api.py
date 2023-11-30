@@ -1,11 +1,11 @@
 import pytest
-import easyocr
 import base64
-import requests
-import numpy as np
 import concurrent.futures
 import time
 from io import BytesIO
+import requests
+import easyocr
+import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 # Define the base URL for the API
