@@ -6,10 +6,7 @@ from io import BytesIO
 import requests
 import streamlit as st
 from PIL import Image
-
-PROCAP_API_URL = "http://127.0.0.1:8087/predict"
-CAPTION_API_URL = "http://127.0.0.1:8088/generate_captions"
-INPAINT_API_URL = "http://127.0.0.1:8089/inpaint"
+import config
 
 st.set_page_config(
     layout="wide",
@@ -47,10 +44,7 @@ def call_inpaint_image_api(image, extract_text=True):
     payload = {"image": encoded_image}
     os.remove("temp_img.png")
 
-    try:
-        response = requests.post(INPAINT_API_URL, json=payload)
-    except Exception as e:
-        return f"Error: {e}"
+    response = requests.post(INPAINT_API_URL, json=payload)
 
     if response.status_code == 200:
         result = response.json()
@@ -60,7 +54,7 @@ def call_inpaint_image_api(image, extract_text=True):
         result = {"image": image, "text": text} if extract_text else {"image": image}
 
         return result
-    return f"Error: {response.status_code} - {response.text}"
+    raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
 def call_caption_api(inpainted_image):
@@ -81,7 +75,7 @@ def call_caption_api(inpainted_image):
     if response.status_code == 200:
         result = response.json()
         return result["caption"]
-    return f"Error: {response.status_code} - {response.text}"
+    raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
 def call_procap_api(caption):
@@ -98,10 +92,11 @@ def call_procap_api(caption):
     if response.status_code == 200:
         result = response.json()
         return result
-    return f"Error: {response.status_code} - {response.text}"
+    raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
 def main():
+
     st.title("Detecting harmful and offensive content in memes")
 
     uploaded_file = st.file_uploader(
@@ -116,22 +111,34 @@ def main():
         col1.markdown("#### Uploaded meme:")
         col1.image(meme_image, use_column_width=True)
 
-        with st.spinner("Inpainting image..."):
-            inpainted_results = call_inpaint_image_api(meme_image)
-        col1.write("Inpainting complete.")
+        try:
+            with st.spinner("Inpainting image..."):
+                inpainted_results = call_inpaint_image_api(meme_image)
+        except Exception:
+            col1.write("Inpainting failed. Please try again.")
+            return
+        else:
+            col1.write("Inpainting complete.")
 
         inpainted_image = inpainted_results["image"]
         text = inpainted_results["text"]
+        try:
+            with st.spinner("Generating captions..."):
+                caption = call_caption_api(inpainted_image)
+        except Exception:
+            col1.write("Captioning failed. Please try again.")
+            return
 
-        with st.spinner("Generating captions..."):
-            caption = call_caption_api(inpainted_image)
         col1.write("Captioning complete.")
 
         input_text = text + " . " + "It was <mask>" + " . " + caption + " . </s>"
 
-        with st.spinner("Classifying meme..."):
-            procap_results = call_procap_api(input_text)
-
+        try:
+            with st.spinner("Classifying meme..."):
+                procap_results = call_procap_api(input_text)
+        except Exception:
+            col1.write("Classification failed. Please try again.")
+            return
         col1.write("Classifying complete.")
 
         col2.markdown("#### Results:")
