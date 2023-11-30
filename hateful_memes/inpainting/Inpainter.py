@@ -70,9 +70,10 @@ class ImageConverter:
             )
             region = self.image.crop((left, upper, right, lower))
             text = self.reader.readtext(np.array(region))
-            all_text.append(text[0][1])
+            if text != []:
+                all_text.append(text[0][1])
 
-        self.text = " ".join(all_text)
+        self.text = " ".join(all_text) if all_text != [] else ""
         return res
 
     def create_mask(self):
