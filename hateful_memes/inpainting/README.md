@@ -36,7 +36,7 @@ conda env update --file environment.yaml
 2. Run the server
 
 ```bash
-uvicorn app:app --reload --port 8089 --host 0.0.0.0
+uvicorn app:app --reload --port 8089 --host 127.0.0.1
 ```
 
 ### How to make request?
