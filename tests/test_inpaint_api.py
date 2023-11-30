@@ -10,6 +10,7 @@ from PIL import Image, ImageDraw, ImageFont
 
 # Define the base URL for the API
 INPAINT_API_URL = "http://127.0.0.1:8089/inpaint"
+BUFFER = BytesIO()
 
 
 @pytest.fixture
@@ -36,9 +37,8 @@ def send_request(sample_image):
     Returns:
         int: Status code of the response.
     """
-    buffered = BytesIO()
-    sample_image.save(buffered, format="PNG")
-    image_bytes = buffered.getvalue()
+    sample_image.save(BUFFER, format="PNG")
+    image_bytes = BUFFER.getvalue()
     encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
     # Prepare the payload
