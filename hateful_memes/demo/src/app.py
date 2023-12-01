@@ -44,7 +44,7 @@ def call_inpaint_image_api(image, extract_text=True):
     payload = {"image": encoded_image}
     os.remove("temp_img.png")
 
-    response = requests.post(INPAINT_API_URL, json=payload)
+    response = requests.post(config.INPAINT_API_URL, json=payload)
 
     if response.status_code == 200:
         result = response.json()
@@ -68,7 +68,7 @@ def call_caption_api(inpainted_image):
     payload = {"image": encoded_image}
     os.remove("inpainted_temp_img.png")
     try:
-        response = requests.post(CAPTION_API_URL, json=payload)
+        response = requests.post(config.CAPTION_API_URL, json=payload)
     except Exception as e:
         return f"Error: {e}"
 
@@ -85,7 +85,7 @@ def call_procap_api(caption):
     payload = {"text": caption}
 
     try:
-        response = requests.post(PROCAP_API_URL, json=payload)
+        response = requests.post(config.PROCAP_API_URL, json=payload)
     except Exception as e:
         return f"Error: {e}"
 
