@@ -152,8 +152,13 @@ def main():
         col2.write("##### Classification:")
 
         result = "Hateful" if procap_results["prediction"] == 1 else "Not hateful"
+        probability = (
+            procap_results["probability"]
+            if result == "Hateful"
+            else 1 - procap_results["probability"]
+        )
         col2.markdown(result)
-        col2.write(f"with probability: {procap_results['probability']}")
+        col2.write(f"with probability: {probability * 100:.2f}%")
 
         time_taken = time.time() - start
         col1.write(f"Time taken: {round(time_taken, 2)} seconds")
