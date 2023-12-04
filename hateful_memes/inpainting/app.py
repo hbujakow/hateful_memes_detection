@@ -41,20 +41,18 @@ class InputData(BaseModel):
 @app.post("/inpaint")
 async def inpaint(image: InputData):
     im = Image.open(BytesIO(base64.b64decode((image.image))))
-    try:
-        if not im.format:
-            raise ValueError("Invalid image format. Please upload a valid image.")
-        img_converter.upload_img(image=im)
-        inpainted_image = img_converter.inpaint_image()
-        buffered = BytesIO()
-        inpainted_image.save(buffered, format="PNG")
-        image_bytes = buffered.getvalue()
-        encoded_image = base64.b64encode(image_bytes).decode("utf-8")
+    if not im.format:
+        raise ValueError("Invalid image format. Please upload a valid image.")
+    img_converter.upload_img(image=im)
+    inpainted_image = img_converter.inpaint_image()
+    buffered = BytesIO()
+    inpainted_image.save(buffered, format="PNG")
+    image_bytes = buffered.getvalue()
+    encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
-        text = img_converter.retrieve_text()
-        return {"image": encoded_image, "text": text}
-    except Exception as e:
-        raise e
+    text = img_converter.retrieve_text()
+    return {"image": encoded_image, "text": text}
+
 
 
 if __name__ == "__main__":
