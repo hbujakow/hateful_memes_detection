@@ -1,5 +1,6 @@
 import os
 
+import mlflow
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -8,6 +9,11 @@ from dataset import MultiModalData
 from sklearn.metrics import roc_auc_score
 from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup
+
+MLFLOW_TRACKING_URI = "/home2/faculty/mgalkowski/memes_analysis/mlflow_data"
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
+mlflow.set_experiment("hateful_memes")
 
 
 def bce_for_loss(logits, labels):
@@ -35,11 +41,9 @@ def compute_score(logits, labels):
 
 
 def compute_scaler_score(logits, labels):
-    # print (logits,logits.shape)
     logits = torch.max(logits, 1)[1]
     labels = labels.squeeze(-1)
     score = (logits == labels).int()
-    # print (score.sum(),labels,logits)
     return score.sum().float()
 
 
@@ -50,139 +54,158 @@ def log_hyperpara(logger, opt):
 
 
 def train_for_epoch(opt, model, train_loader, test_loader):
-    # initialization of saving path
-    if opt.SAVE:
-        model_path = os.path.join(
-            opt.MODEL_PATH, "_".join([str(opt.SEED), opt.DATASET])
+    with mlflow.start_run(
+        run_name=f"{opt.MODEL_NAME.replace('-', '_')}_{opt.SAVE_NUM}"
+    ):
+        mlflow.log_params(vars(opt))
+
+        if opt.SAVE:
+            model_path = os.path.join(
+                opt.MODEL_PATH, "_".join([str(opt.SEED), opt.DATASET])
+            )
+            if not os.path.exists(model_path):
+                os.mkdir(model_path)
+
+        # initialization of logger
+        log_path = os.path.join(opt.LOG_PATH)
+        if not os.path.exists(log_path):
+            os.mkdir(log_path)
+
+        logger = utils.Logger(
+            os.path.join(log_path, opt.SAVE_NUM + opt.MODEL_NAME + ".txt")
         )
-        if not os.path.exists(model_path):
-            os.mkdir(model_path)
+        log_hyperpara(logger, opt)
 
-    # initialization of logger
-    log_path = os.path.join(opt.LOG_PATH)
-    if not os.path.exists(log_path):
-        os.mkdir(log_path)
+        logger.write(
+            "Length of training set: %d, length of testing set: %d"
+            % (len(train_loader.dataset), len(test_loader.dataset))
+        )
+        logger.write("Max length of sentences: %d" % (model.max_length))
 
-    logger = utils.Logger(
-        os.path.join(log_path, opt.SAVE_NUM + opt.MODEL_NAME + ".txt")
-    )
-    log_hyperpara(logger, opt)
-
-    logger.write(
-        "Length of training set: %d, length of testing set: %d"
-        % (len(train_loader.dataset), len(test_loader.dataset))
-    )
-    logger.write("Max length of sentences: %d" % (model.max_length))
-
-    # initialization of optimizer
-    params = {}
-    for n, p in model.named_parameters():
-        if opt.FIX_LAYERS > 0:
-            if "encoder.layer" in n:
-                try:
-                    layer_num = int(n[n.find("encoder.layer") + 14 :].split(".")[0])
-                except Exception as e:
-                    print(n)
-                    print(e)
-                    raise Exception("")
-                if layer_num >= opt.FIX_LAYERS:
+        # initialization of optimizer
+        params = {}
+        for n, p in model.named_parameters():
+            if opt.FIX_LAYERS > 0:
+                if "encoder.layer" in n:
+                    try:
+                        layer_num = int(n[n.find("encoder.layer") + 14 :].split(".")[0])
+                    except Exception as e:
+                        print(n)
+                        print(e)
+                        raise Exception("")
+                    if layer_num >= opt.FIX_LAYERS:
+                        print("yes", n)
+                        params[n] = p
+                    else:
+                        print("no ", n)
+                elif "embeddings" in n:
+                    print("no ", n)
+                else:
                     print("yes", n)
                     params[n] = p
-                else:
-                    print("no ", n)
-            elif "embeddings" in n:
-                print("no ", n)
             else:
-                print("yes", n)
                 params[n] = p
-        else:
-            params[n] = p
-    no_decay = ["bias", "LayerNorm.weight"]
-    optimizer_grouped_parameters = [
-        {
-            "params": [
-                p for n, p in params.items() if not any(nd in n for nd in no_decay)
-            ],
-            "weight_decay": opt.WEIGHT_DECAY,
-        },
-        {
-            "params": [p for n, p in params.items() if any(nd in n for nd in no_decay)],
-            "weight_decay": 0.0,
-        },
-    ]
+        no_decay = ["bias", "LayerNorm.weight"]
+        optimizer_grouped_parameters = [
+            {
+                "params": [
+                    p for n, p in params.items() if not any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": opt.WEIGHT_DECAY,
+            },
+            {
+                "params": [
+                    p for n, p in params.items() if any(nd in n for nd in no_decay)
+                ],
+                "weight_decay": 0.0,
+            },
+        ]
 
-    optim = AdamW(
-        optimizer_grouped_parameters,
-        lr=opt.LR_RATE,
-        eps=opt.EPS,
-    )
+        optim = AdamW(
+            optimizer_grouped_parameters,
+            lr=opt.LR_RATE,
+            eps=opt.EPS,
+        )
 
-    num_training_steps = len(train_loader) * opt.EPOCHS
-    scheduler = get_linear_schedule_with_warmup(
-        optim, num_warmup_steps=0, num_training_steps=num_training_steps
-    )
+        num_training_steps = len(train_loader) * opt.EPOCHS
+        scheduler = get_linear_schedule_with_warmup(
+            optim, num_warmup_steps=0, num_training_steps=num_training_steps
+        )
 
-    # strat training
-    record_auc = []
-    record_acc = []
-    for epoch in range(opt.EPOCHS):
-        model.train(True)
-        total_loss = 0.0
-        scores = 0.0
-        for i, batch in enumerate(train_loader):
-            # break
-            # label = batch["label"].float().cuda().view(-1, 1)
-            target = batch["target"].cuda()
+        # start training
+        record_auc = []
+        record_acc = []
+        for epoch in range(opt.EPOCHS):
+            model.train(True)
+            total_loss = 0.0
+            scores = 0.0
+            for i, batch in enumerate(train_loader):
+                # break
+                # label = batch["label"].float().cuda().view(-1, 1)
+                target = batch["target"].cuda()
 
-            if opt.USE_DEMO:
-                text = batch["prompt_all_text"]
+                if opt.USE_DEMO:
+                    text = batch["prompt_all_text"]
+                else:
+                    text = batch["test_all_text"]  # without demonstrations
+
+                logits = model(text)
+
+                loss = bce_for_loss(logits, target)
+                batch_score = compute_score(logits, target)
+                scores += batch_score
+
+                # print("Epoch:", epoch, "Iteration:", i, loss.item())  # , batch_score)
+                loss.backward()
+                optim.step()
+                scheduler.step()
+                optim.zero_grad()
+
+                total_loss += loss
+            print("Epoch:", epoch + 1, "Loss:", total_loss.item() / len(train_loader))
+            mlflow.log_metric(
+                "train_loss", total_loss.item() / len(train_loader), step=epoch + 1
+            )
+
+            model.train(False)
+            scores /= len(train_loader.dataset)
+            if opt.USE_DEMO and opt.MULTI_QUERY:
+                eval_acc, eval_auc = eval_multi_model(opt, model)
             else:
-                text = batch["test_all_text"]  # without demonstrations
+                eval_acc, eval_auc = eval_model(opt, model, test_loader)
+            mlflow.log_metric("eval_acc", eval_acc, step=epoch + 1)
+            mlflow.log_metric("eval_auc", eval_auc, step=epoch + 1)
+            mlflow.log_metric("train_acc", scores * 100.0, step=epoch + 1)
 
-            logits = model(text)
+            record_auc.append(eval_auc)
+            record_acc.append(eval_acc)
 
-            loss = bce_for_loss(logits, target)
-            batch_score = compute_score(logits, target)
-            scores += batch_score
+            logger.write("Epoch %d" % (epoch + 1))
+            logger.write(
+                "\ttrain_loss: %.2f, accuracy: %.2f" % (total_loss, scores * 100.0)
+            )
+            logger.write(
+                "\tevaluation auc: %.2f, accuracy: %.2f" % (eval_auc, eval_acc)
+            )
 
-            # print("Epoch:", epoch, "Iteration:", i, loss.item())  # , batch_score)
-            loss.backward()
-            optim.step()
-            scheduler.step()
-            optim.zero_grad()
-
-            total_loss += loss
-        print("Epoch:", epoch, "Loss:", total_loss.item() / len(train_loader))
-
-        model.train(False)
-        scores /= len(train_loader.dataset)
-        if opt.USE_DEMO and opt.MULTI_QUERY:
-            eval_acc, eval_auc = eval_multi_model(opt, model)
-        else:
-            eval_acc, eval_auc = eval_model(opt, model, test_loader)
-
-        record_auc.append(eval_auc)
-        record_acc.append(eval_acc)
-        logger.write("Epoch %d" % (epoch))
+        max_idx = sorted(
+            range(len(record_auc)),
+            key=lambda k: record_auc[k] + record_acc[k],
+            reverse=True,
+        )[0]
+        logger.write("Maximum epoch: %d" % (max_idx))
         logger.write(
-            "\ttrain_loss: %.2f, accuracy: %.2f" % (total_loss, scores * 100.0)
+            "\tevaluation auc: %.2f, accuracy: %.2f"
+            % (record_auc[max_idx], record_acc[max_idx])
         )
-        logger.write("\tevaluation auc: %.2f, accuracy: %.2f" % (eval_auc, eval_acc))
-    max_idx = sorted(
-        range(len(record_auc)),
-        key=lambda k: record_auc[k] + record_acc[k],
-        reverse=True,
-    )[0]
-    logger.write("Maximum epoch: %d" % (max_idx))
-    logger.write(
-        "\tevaluation auc: %.2f, accuracy: %.2f"
-        % (record_auc[max_idx], record_acc[max_idx])
-    )
-    if opt.SAVE:
-        torch.save(
-            model.state_dict(),
-            os.path.join(model_path, opt.SAVE_NUM + opt.MODEL_NAME + ".pth"),
-        )
+        if opt.SAVE:
+            torch.save(
+                model.state_dict(),
+                os.path.join(model_path, opt.SAVE_NUM + opt.MODEL_NAME + ".pth"),
+            )
+            mlflow.pytorch.log_model(
+                model, f"{opt.MODEL_NAME.replace('-', '_')}_{opt.SAVE_NUM}"
+            )
 
 
 def eval_model(opt, model, test_loader):

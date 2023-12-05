@@ -13,25 +13,11 @@ def load_pkl(path):
     return data
 
 
-def dump_pkl(path, info):
-    pkl.dump(info, open(path, "wb"))
-
-
 def read_json(path):
     utils.assert_exits(path)
     data = json.load(open(path, "rb"))
     """in anet-qa returns a list"""
     return data
-
-
-def read_jsonl(path):
-    total_info = []
-    with open(path, "rb") as f:
-        lines = f.readlines()
-    for _, info in enumerate(lines):
-        data = json.loads(info)
-        total_info.append(data)
-    return total_info
 
 
 class MultiModalData:
