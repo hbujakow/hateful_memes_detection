@@ -31,20 +31,20 @@ def sample_image():
     return sample_image
 
 
-def send_request(sample_image):
+def send_inpaint_request(sample_image):
     """
     Sends a POST request to the inpaint API.
+    Args:
+        sample_image (PIL.Image.Image): Sample image.
     Returns:
         Dict: API response consisting of encoded image and extracted text.
     """
+    assert isinstance(sample_image, Image.Image)
     sample_image.save(BUFFER, format="PNG")
     image_bytes = BUFFER.getvalue()
     encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
-    # Prepare the payload
     payload = {"image": encoded_image}
-
-    # Make a POST request to the API
     response = requests.post(INPAINT_API_URL + "/inpaint", json=payload)
 
     return response
@@ -54,8 +54,7 @@ def test_inpaint_api_response_ok(sample_image):
     """
     Tests inpaint API if it returns the correct format of response and status code.
     """
-
-    response = send_request(sample_image)
+    response = send_inpaint_request(sample_image)
     assert response.status_code == 200
     assert isinstance(response.json()["image"], str)
     assert isinstance(response.json()["text"], str)
@@ -63,12 +62,14 @@ def test_inpaint_api_response_ok(sample_image):
 
 def test_inpaint_api_4xx():
     """
-    Tests inpaint API if it returns the appropriate status code.
+    Tests if API returns the appropriate status code.
     """
-    response = requests.post(INPAINT_API_URL + "/inpaint", json={"image": 123})
+    response = requests.post(INPAINT_API_URL + "/inpaint", json={"image": "123"})
     assert response.status_code >= 400 and response.status_code < 500
     response2 = requests.post(INPAINT_API_URL + "/inpaint", json={"imageee": "123"})
     assert response2.status_code >= 400 and response2.status_code < 500
+    response3 = requests.post(INPAINT_API_URL + "/inpaint", json={"image": 123})
+    assert response3.status_code >= 400 and response3.status_code < 500
 
 
 def test_inpaint_api_image_inpainting(sample_image):
@@ -77,7 +78,7 @@ def test_inpaint_api_image_inpainting(sample_image):
     i.e. there is no text on the inpainted image.
     """
 
-    response = send_request(sample_image)
+    response = send_inpaint_request(sample_image)
 
     decoded_image = base64.b64decode(response.json()["image"])
     assert decoded_image is not None
@@ -94,7 +95,7 @@ def test_inpaint_api_extracted_text(sample_image):
     Tests if the extracted text from the image is correct.
     """
 
-    response = send_request(sample_image)
+    response = send_inpaint_request(sample_image)
     assert response.json()["text"] == "Sample meme text"
 
 
@@ -109,7 +110,8 @@ def test_concurrent_requests(sample_image, num_requests):
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_requests) as executor:
         future_to_request = {
-            executor.submit(send_request, sample_image): i for i in range(num_requests)
+            executor.submit(send_inpaint_request, sample_image): i
+            for i in range(num_requests)
         }
 
         results = [
@@ -129,7 +131,7 @@ def test_api_response_time(sample_image, acceptable_response_time=5.0):
     """
 
     start_time = time.time()
-    response = send_request(sample_image)
+    response = send_inpaint_request(sample_image)
     end_time = time.time()
     elapsed_time = end_time - start_time
     assert elapsed_time < acceptable_response_time
