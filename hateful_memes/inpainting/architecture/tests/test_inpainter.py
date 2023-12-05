@@ -46,7 +46,7 @@ def test_image_inpainting(sample_image):
     assert text_on_inpainted_image == []
 
 
-def test_inpaint_api_extracted_text(sample_image):
+def test_extracted_text(sample_image):
     """
     Tests if the extracted text from the image is correct.
     """
