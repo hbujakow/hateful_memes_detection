@@ -11,12 +11,14 @@ from fastapi.responses import JSONResponse
 app = FastAPI()
 img_converter = ImageConverter()
 
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail},
     )
+
 
 @app.exception_handler(ValueError)
 async def http_exception_handler(request: Request, exc: ValueError):
@@ -25,12 +27,14 @@ async def http_exception_handler(request: Request, exc: ValueError):
         content={"message": exc.args[0]},
     )
 
+
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={"message": "Internal Server Error"},
     )
+
 
 class InputData(BaseModel):
     """Data model for input data to API"""
@@ -52,7 +56,6 @@ async def inpaint(image: InputData):
 
     text = img_converter.retrieve_text()
     return {"image": encoded_image, "text": text}
-
 
 
 if __name__ == "__main__":
