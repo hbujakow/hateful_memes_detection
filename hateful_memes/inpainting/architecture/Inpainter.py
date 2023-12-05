@@ -7,9 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms as T
-from model.networks import Generator
 from PIL import Image, ImageDraw
 from tqdm import tqdm
+from model.networks import Generator
+
 
 DATAPATH = Path(__file__).resolve().parent.parent / "data"
 plt.rcParams["figure.facecolor"] = "white"
@@ -70,9 +71,10 @@ class ImageConverter:
             )
             region = self.image.crop((left, upper, right, lower))
             text = self.reader.readtext(np.array(region))
-            all_text.append(text[0][1])
+            if text != []:
+                all_text.append(text[0][1])
 
-        self.text = " ".join(all_text)
+        self.text = " ".join(all_text) if all_text != [] else ""
         return res
 
     def create_mask(self):
