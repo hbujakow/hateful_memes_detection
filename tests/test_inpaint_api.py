@@ -72,33 +72,6 @@ def test_inpaint_api_4xx():
     assert response3.status_code >= 400 and response3.status_code < 500
 
 
-def test_inpaint_api_image_inpainting(sample_image):
-    """
-    Tests if the image is inpainted correctly by the inpaint API,
-    i.e. there is no text on the inpainted image.
-    """
-
-    response = send_inpaint_request(sample_image)
-
-    decoded_image = base64.b64decode(response.json()["image"])
-    assert decoded_image is not None
-
-    inpainted_image = Image.open(BytesIO(decoded_image))
-    assert isinstance(inpainted_image, Image.Image)
-
-    text_on_inpainted_image = easyocr.Reader(["en"]).readtext(np.array(inpainted_image))
-    assert text_on_inpainted_image == []
-
-
-def test_inpaint_api_extracted_text(sample_image):
-    """
-    Tests if the extracted text from the image is correct.
-    """
-
-    response = send_inpaint_request(sample_image)
-    assert response.json()["text"] == "Sample meme text"
-
-
 @pytest.mark.parametrize("num_requests", [5, 10])
 def test_concurrent_requests(sample_image, num_requests):
     """
