@@ -1,6 +1,4 @@
 import pytest
-import base64
-import concurrent.futures
 import easyocr
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont

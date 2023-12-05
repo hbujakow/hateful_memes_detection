@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("../")
+sys.path.append("../architecture/")
 
 import base64
 from io import BytesIO
@@ -9,7 +9,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from PIL import Image
 from pydantic import BaseModel
-from architecture.Inpainter import ImageConverter
+from Inpainter import ImageConverter
 
 
 app = FastAPI()
