@@ -1,12 +1,16 @@
+import sys
+
+sys.path.append("../")
+
 import base64
 from io import BytesIO
-
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
-from Inpainter import ImageConverter
+from fastapi.responses import JSONResponse
 from PIL import Image
 from pydantic import BaseModel
-from fastapi.responses import JSONResponse
+from architecture.Inpainter import ImageConverter
+
 
 app = FastAPI()
 img_converter = ImageConverter()

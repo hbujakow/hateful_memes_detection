@@ -2,26 +2,10 @@
 
 This microservice serves the purpose of inpainting the meme image (i.e. removing the text from the image and filling in the gap to obtain a clear image) and extracting the text using Optical Character Recognition.
 
-### Folder structure
 
-```
-├───model
-│   ├───networks.py
-│   ├───__init__.py
-│
-├───pretrained
-│       README.md
-│
-├───app.py
-├───environment.yml
-├───Inpainter.py
-├───README.md
+`architecture/model` dir contains the logic of the model inpainting the images - [source](https://github.com/nipponjo/deepfillv2-pytorch/blob/master/model/networks.py).
 
-```
-
-`model` dir contains the logic of the model inpainting the images - [source](https://github.com/nipponjo/deepfillv2-pytorch/blob/master/model/networks.py).
-
-`pretrained` dir contains the instruction on where to get the pretrained model weights from.
+`architecture/pretrained` dir contains the instruction on where to get the pretrained model weights from.
 
 ### Setup
 

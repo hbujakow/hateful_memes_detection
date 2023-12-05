@@ -7,11 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 import torch
 import torchvision.transforms as T
-from model.networks import Generator
 from PIL import Image, ImageDraw
 from tqdm import tqdm
+from architecture.model.networks import Generator
+
 
 DATAPATH = Path(__file__).resolve().parent.parent / "data"
+print(DATAPATH)
 plt.rcParams["figure.facecolor"] = "white"
 
 
