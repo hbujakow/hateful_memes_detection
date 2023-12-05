@@ -9,7 +9,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 # Define the base URL for the API
-INPAINT_API_URL = "http://127.0.0.1:8089/inpaint"
+INPAINT_API_URL = "http://127.0.0.1:8089"
 BUFFER = BytesIO()
 
 
@@ -45,45 +45,40 @@ def send_request(sample_image):
     payload = {"image": encoded_image}
 
     # Make a POST request to the API
-    response = requests.post(INPAINT_API_URL, json=payload)
+    response = requests.post(INPAINT_API_URL + "/inpaint", json=payload)
 
     return response
 
 
-def test_inpaint_api_status_code(sample_image):
+def test_inpaint_api_response_ok(sample_image):
     """
-    Tests the status code of the inpaint API.
-    Args:
-        sample_image (PIL.Image.Image): Sample image.
+    Tests inpaint API if it returns the correct format of response and status code.
     """
 
     response = send_request(sample_image)
     assert response.status_code == 200
+    assert isinstance(response.json()["image"], str)
+    assert isinstance(response.json()["text"], str)
 
 
-def test_inpaint_api_response_keys(sample_image):
+def test_inpaint_api_4xx():
     """
-    Tests if the response from the inpaint API contains necessary keys (image, text).
-    Args:
-        sample_image (PIL.Image.Image): Sample image.
+    Tests inpaint API if it returns the appropriate status code.
     """
-
-    response = send_request(sample_image)
-    assert "image" in response.json()
-    assert "text" in response.json()
+    response = requests.post(INPAINT_API_URL + "/inpaint", json={"image": 123})
+    assert response.status_code >= 400 and response.status_code < 500
+    response2 = requests.post(INPAINT_API_URL + "/inpaint", json={"imageee": "123"})
+    assert response2.status_code >= 400 and response2.status_code < 500
 
 
 def test_inpaint_api_image_inpainting(sample_image):
     """
     Tests if the image is inpainted correctly by the inpaint API,
     i.e. there is no text on the inpainted image.
-    Args:
-        sample_image (PIL.Image.Image): Sample image.
     """
 
     response = send_request(sample_image)
 
-    # Decode the base64 encoded image from the response
     decoded_image = base64.b64decode(response.json()["image"])
     assert decoded_image is not None
 
@@ -97,15 +92,13 @@ def test_inpaint_api_image_inpainting(sample_image):
 def test_inpaint_api_extracted_text(sample_image):
     """
     Tests if the extracted text from the image is correct.
-    Args:
-        sample_image (PIL.Image.Image): Sample image.
     """
 
     response = send_request(sample_image)
     assert response.json()["text"] == "Sample meme text"
 
 
-@pytest.mark.parametrize("num_requests", [5, 10])  # modify this to test more requests
+@pytest.mark.parametrize("num_requests", [5, 10])
 def test_concurrent_requests(sample_image, num_requests):
     """
     Tests if the inpaint API can handle multiple concurrent requests.
