@@ -35,7 +35,7 @@ def send_request(sample_image):
     """
     Sends a POST request to the inpaint API.
     Returns:
-        int: Status code of the response.
+        Dict: API response consisting of encoded image and extracted text.
     """
     sample_image.save(BUFFER, format="PNG")
     image_bytes = BUFFER.getvalue()
