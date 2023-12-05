@@ -13,7 +13,6 @@ from model.networks import Generator
 
 
 DATAPATH = Path(__file__).resolve().parent.parent / "data"
-print(DATAPATH)
 plt.rcParams["figure.facecolor"] = "white"
 
 
