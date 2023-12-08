@@ -2,20 +2,25 @@
 #SBATCH --account=ganzha_23
 #SBATCH --partition=long
 #SBATCH --cpus-per-gpu=4
-#SBATCH --gpus=a100:8
+#SBATCH --gpus=a100:3
 #SBATCH --time=24:00:00
 #SBATCH --mem=150G
 #SBATCH --ntasks=1
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=wiktor.jakubowski.stud@pw.edu.pl
 #SBATCH --job-name=llava_finetune
-#SBATCH --output=/home2/faculty/wjakubowski/logs/llava/train_7_12_2023_8gpu.log
+#SBATCH --output=/home2/faculty/wjakubowski/logs/llava/train_7_12_2023_1gpu.log
 
 . /home2/faculty/wjakubowski/miniconda3/etc/profile.d/conda.sh
 conda activate llava
 
+wandb login 6b0f39a9fb1b517ea0286d1dbf54c20229b387d8
+
+export PYTHONPATH=/home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/
+
 deepspeed /home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/llava/train/train_mem.py \
     --deepspeed /home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/scripts/zero3.json \
+    --lora_enable True --lora_r 128 --lora_alpha 256 --mm_projector_lr 2e-5 \
     --model_name_or_path liuhaotian/llava-v1.5-13b \
     --version v1 \
     --data_path /home2/faculty/wjakubowski/memes_analysis/data/llava_train.json \
@@ -47,4 +52,4 @@ deepspeed /home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/ll
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --LLaVArt_to wandb
+    --report_to wandb
