@@ -1,6 +1,7 @@
 # Hateful memes detection using LLaVA Vision-Language model
 
 Download the repository and install packages as described in [here](https://github.com/haotian-liu/LLaVA/tree/main?tab=readme-ov-file#install).
+
 **Disclaimer** If you run into problems, when running `pip install flash-attn --no-build-isolation` on cluster, run the job `finetuning/install_flash.sh` instead. This will install the package with the information about available CUDA version.
 
 ## Fine-tuning
