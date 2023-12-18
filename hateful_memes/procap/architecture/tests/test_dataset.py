@@ -1,11 +1,44 @@
 import pytest
-from config import parse_opt
 from dataset import MultiModalData
 
+class Config:
+    def __init__(self):
+        from datetime import datetime
+        self.DATASET = "mem"
+        self.CAP_TYPE = "vqa"
+        self.MODEL_NAME = "roberta-large"
+        self.DATA = "."
+        self.CAPTION_PATH = "./captions"
+        self.LOG_PATH = "" # not needed
+        self.MODEL_PATH = "" # not needed
+        self.NUM_LABELS = 2
+        self.POS_WORD = "good"
+        self.NEG_WORD = "bad"
+        self.MULTI_QUERY = True
+        self.USE_DEMO = True
+        self.NUM_QUERIES = 4
+        self.WEIGHT_DECAY = 0.01
+        self.LR_RATE = 1e-5
+        self.EPS = 1e-8
+        self.BATCH_SIZE = 16
+        self.FIX_LAYERS = 2
+        self.NUM_SAMPLE = 1
+        self.LENGTH = 65
+        self.ASK_CAP = "race,gender,country,animal,valid_disable,religion"
+        self.CAP_LENGTH = 12
+        self.PRETRAIN_DATA = "conceptual"
+        self.IMG_VERSION = "clean"
+        self.ADD_ENT = False
+        self.ADD_DEM = False
+        self.DEBUG = False
+        self.SAVE = True
+        self.SAVE_NUM = datetime.now().strftime("%Y%m%d_%H%M")
+        self.EPOCHS = 10
+        self.SEED = 1111
 
 @pytest.fixture
 def dataset():
-    opt = parse_opt()
+    opt = Config()
     return MultiModalData(opt, mode="train")
 
 
