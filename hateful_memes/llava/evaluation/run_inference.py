@@ -1,11 +1,9 @@
 import argparse
-import torch
 import os
-import json
-from tqdm import tqdm
-import shortuuid
 import sys
 import pandas as pd
+import torch
+from tqdm import tqdm
 
 sys.path.append("../LLaVA/")
 
@@ -21,16 +19,26 @@ from llava.utils import disable_torch_init
 from llava.mm_utils import (
     tokenizer_image_token,
     get_model_name_from_path,
-    KeywordsStoppingCriteria,
+    # KeywordsStoppingCriteria,
 )
 
 from PIL import Image
 import math
+from typing import List
 
 
-def split_list(lst, n):
-    """Split a list into n (roughly) equal-sized chunks"""
-    chunk_size = math.ceil(len(lst) / n)  # integer division
+def split_list(lst: List, n: int) -> List[List]:
+    """
+    Splits a list into n (roughly) equal-sized chunks
+
+    Args:
+        lst (List): The list to be split
+        n (int): The number of chunks to split the list into
+
+    Returns:
+        List[List]: A list of n (roughly) equal-sized chunks
+    """
+    chunk_size = math.ceil(len(lst) / n)
     return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 
@@ -39,7 +47,13 @@ def get_chunk(lst, n, k):
     return chunks[k]
 
 
-def predict(args):
+def predict(args) -> None:
+    """
+    Runs inference on a pretrained model to make predictions on test data.
+
+    Args:
+        args: Command-line arguments.
+    """
     disable_torch_init()
     model_path = os.path.expanduser(args.model_path)
     model_name = get_model_name_from_path(model_path)
@@ -82,8 +96,8 @@ def predict(args):
         ][0]
 
         stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
-        keywords = [stop_str]
-        stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
+        # keywords = [stop_str]
+        # stopping_criteria = KeywordsStoppingCriteria(keywords, tokenizer, input_ids)
 
         with torch.inference_mode():
             output_ids = model.generate(
@@ -114,6 +128,7 @@ def predict(args):
 
         df.at[idx, "prediction"] = outputs
         df.at[idx, "label"] = 1 if outputs == "Yes" else 0
+
     df.to_json(args.dest_file)
 
 
