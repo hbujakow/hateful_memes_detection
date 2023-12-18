@@ -87,11 +87,11 @@ def predict(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-path", type=str, default="/home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/checkpoints/llava-v1.5-13b-lora")
+    parser.add_argument("--model-path", type=str, default="/home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/checkpoints/llava-v1.5-13b-lora-10-epochs")
     parser.add_argument("--model-base", type=str, default="liuhaotian/llava-v1.5-13b")
     parser.add_argument("--data-folder", type=str, default="/home2/faculty/wjakubowski/memes_analysis/data/")
     parser.add_argument("--test-file", type=str, default="/home2/faculty/wjakubowski/memes_analysis/data/dev_seen.jsonl")
-    parser.add_argument("--dest-file", type=str, default="/home2/faculty/wjakubowski/memes_analysis/data/dev_seen_predictions.jsonl")
+    parser.add_argument("--dest-file", type=str, default="/home2/faculty/wjakubowski/memes_analysis/data/dev_seen_predictions_10_epochs.json")
     parser.add_argument("--prompt", type=str, default="Is this meme hateful?\nAnswer the question using a single word or phrase.")
     parser.add_argument("--conv-mode", type=str, default="llava_v1")
     parser.add_argument("--num-chunks", type=int, default=1)
