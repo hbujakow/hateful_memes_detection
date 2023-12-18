@@ -30,19 +30,19 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-buffered = BytesIO()
+BUFFER = BytesIO()
 
 
 def call_inpaint_image_api(image, extract_text=True):
     """
     Inpaints the image. Optionally, returns the text extracted from image with OCR.
     """
-    image.save("temp_img.png")
-    with open("temp_img.png", "rb") as f:
-        encoded_image = base64.b64encode(f.read()).decode("utf-8")
+
+    image.save(BUFFER, format="PNG")
+    image_bytes = BUFFER.getvalue()
+    encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
     payload = {"image": encoded_image}
-    os.remove("temp_img.png")
 
     response = requests.post(config.INPAINT_API_URL, json=payload)
 
@@ -61,12 +61,11 @@ def call_caption_api(inpainted_image):
     """
     Generates captions for the inpainted image.
     """
-    inpainted_image.save("inpainted_temp_img.png")
-    with open("inpainted_temp_img.png", "rb") as inpainted_image:
-        encoded_image = base64.b64encode(inpainted_image.read()).decode("utf-8")
+    inpainted_image.save(BUFFER, format="PNG")
+    image_bytes = BUFFER.getvalue()
+    encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
     payload = {"image": encoded_image}
-    os.remove("inpainted_temp_img.png")
     try:
         response = requests.post(config.CAPTION_API_URL, json=payload)
     except Exception as e:
