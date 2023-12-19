@@ -1,20 +1,20 @@
 #!/bin/bash
 #SBATCH --account=ganzha_23
-#SBATCH --partition=long
+#SBATCH --partition=long,short
 #SBATCH --cpus-per-gpu=4
-#SBATCH --gpus=a100:7
+#SBATCH --gpus=a100:3
 #SBATCH --time=24:00:00
 #SBATCH --mem=150G
 #SBATCH --ntasks=1
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=wiktor.jakubowski.stud@pw.edu.pl
-#SBATCH --job-name=llava_finetune
-#SBATCH --output=/home2/faculty/wjakubowski/logs/llava/train_12_12_2023.log
+#SBATCH --job-name=finetune
+#SBATCH --output=/home2/faculty/wjakubowski/logs/llava/train_17_12_2023.log
 
 . /home2/faculty/wjakubowski/miniconda3/etc/profile.d/conda.sh
 conda activate llava
 
-wandb login 6b0f39a9fb1b517ea0286d1dbf54c20229b387d8
+# wandb login <YOUR_API_KEY>
 
 export PYTHONPATH=/home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/
 
@@ -52,4 +52,4 @@ deepspeed /home2/faculty/wjakubowski/memes_analysis/hateful_memes/llava/LLaVA/ll
     --gradient_checkpointing True \
     --dataloader_num_workers 4 \
     --lazy_preprocess True \
-    --report_to wandb
+    # --report_to wandb # uncommment this if you want to have report process in W&B
