@@ -65,8 +65,14 @@ class InputData(BaseModel):
 
 @app.post("/generate_captions")
 async def predict(image: InputData):
-    im = Image.open(BytesIO(base64.b64decode((image.image))))
+    im = Image.open(BytesIO(base64.b64decode((image.image)))).convert("RGB")
     captions = {}
+
+    generic_caption = generate_prompt_result(
+        model, vis_processors, device, im, "describe briefly what is in the image"
+    )
+    captions["generic"] = generic_caption
+
     person_on_img = generate_prompt_result(
         model, vis_processors, device, im, "is there a person in the image?"
     )
@@ -101,22 +107,12 @@ async def predict(image: InputData):
         captions["animal"] = caption
 
     response = ""
-    for category in "race,gender,country,animal,valid_disable,religion".split(","):
+    for category in "generic,race,gender,country,animal,valid_disable,religion".split(","):
         if category not in captions:
             continue
         response += captions[category] + " . "
     return {"caption": response}
 
-
-
-@app.post("/generic_caption")
-async def generate_generic_caption(image: InputData):
-    im = Image.open(BytesIO(base64.b64decode((image.image))))
-    generic_caption = generate_prompt_result(
-        model, vis_processors, device, im, "describe briefly what is in the image"
-    )
-
-    return {"generic_caption": generic_caption}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8088)
