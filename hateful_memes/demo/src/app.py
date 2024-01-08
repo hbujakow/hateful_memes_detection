@@ -29,8 +29,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# BUFFER = BytesIO()
-
 
 def call_inpaint_image_api(image, extract_text=True):
     """
