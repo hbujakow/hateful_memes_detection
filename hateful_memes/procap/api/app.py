@@ -12,8 +12,8 @@ from pydantic import BaseModel
 
 label_words = ["good", "bad"]
 max_length = 447
-model_name = "distilroberta-base"
-states_path = "/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/models/pbm_1111_mem/221120231605.pth"
+model_name = "roberta-large"
+states_path = "/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/models/1111_mem/20240107_1425_roberta_large.pth"
 
 model = PromptHateModel(
     label_words=label_words, max_length=max_length, model_name=model_name
