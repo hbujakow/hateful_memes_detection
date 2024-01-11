@@ -36,44 +36,49 @@ def main(args) -> None:
 
     data_path = args.data_path
     train_memes = pd.read_json(os.path.join(data_path, "train.jsonl"), lines=True)
-    test_memes = pd.read_json(
-        os.path.join(data_path, "dev_seen.jsonl"), lines=True
-    )  # we use dev_seen for testing as in the original paper for comparison
+    dev_memes = pd.read_json(os.path.join(data_path, "dev_seen.jsonl"), lines=True)
+    test_memes = pd.read_json(os.path.join(data_path, "test_seen.jsonl"), lines=True)
 
     train_memes = train_memes.loc[:, "img"]
+    dev_memes = dev_memes.loc[:, "img"]
     test_memes = test_memes.loc[:, "img"]
 
-    data = {"train": train_memes, "test": test_memes}
+    data = {"train": train_memes, "dev": dev_memes, "test": test_memes}
 
     categories = {
-        # "race": 'what is the race of the person in the image?',
-        # "gender": 'what is the gender of the person in the image?',
-        # 'valid_animal': "is there an animal in the image?",
-        # 'valid_person': 'is there a person in the image?',
-        # "country": 'which country does the person in the image come from?',
-        # "animal": 'what animal is in the image?',
+        "race": "what is the race of the person in the image?",
+        "gender": "what is the gender of the person in the image?",
+        "valid_animal": "is there an animal in the image?",
+        "valid_person": "is there a person in the image?",
+        "country": "which country does the person in the image come from?",
+        "animal": "what animal is in the image?",
         "valid_disable": "are there disabled people in the image?",
         "religion": "what is the religion of the person in the image?",
     }
 
+    generic_caption = {"generic": "describe briefly what is in the image"}
+
     print(f"Part for: {categories.keys()}")
 
-    for category, question in tqdm(
-        categories.items(), desc="Generating captions for categories", position=0
+    for data_split, dataset in tqdm(
+        data.items(),
+        desc="Generating captions",
+        position=1,
+        leave=False,
     ):
-        for data_split, dataset in tqdm(
-            data.items(),
-            desc=f"Generating captions [{category}]",
-            position=1,
-            leave=False,
-        ):
+        if data_split == "test" and generic_caption != {}:
+            categories.update(generic_caption)
+
+        for category, question in tqdm(categories.items(), position=0):
+            print("Generating captions for: ", category)
             captions = {}
             for i, path in enumerate(dataset):
                 if i % 250 == 0:
                     print(
                         f"Already preprocessing {i*100/len(dataset):2f}% of the {data_split} dataset"
                     )
-                image = Image.open(os.path.join(data_path, "inpainted", path))
+                # image = Image.open(os.path.join(data_path, "inpainted", path))
+                image = Image.open(os.path.join(data_path, path))  # not inpainted
                 caption = generate_prompt_result(
                     model, vis_processors, device, image, question
                 )
