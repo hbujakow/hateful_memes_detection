@@ -22,4 +22,4 @@ Download the repository and install packages as described in [here](https://gith
 
 2. Run `generate_predictions.sh` (modify the paths to data & model to your case).
 
-3. Use `evaluation.ipynb` to calculate the performance of the model.
+3. Use `evaluate_predictions` to calculate the performance of the model.
