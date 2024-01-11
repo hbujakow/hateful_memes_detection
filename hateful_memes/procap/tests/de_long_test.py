@@ -1,3 +1,5 @@
+# FROM: https://github.com/yandexdataschool/roc_comparison/blob/master/compare_auc_delong_xu.py
+
 import pandas as pd
 import numpy as np
 import scipy.stats
@@ -93,9 +95,6 @@ def compute_ground_truth_statistics(ground_truth):
     order = (-ground_truth).argsort()
     label_1_count = int(ground_truth.sum())
     return order, label_1_count
-
-
-# FROM: https://github.com/yandexdataschool/roc_comparison/blob/master/compare_auc_delong_xu.py
 
 
 def delong_roc_variance(ground_truth, predictions):
