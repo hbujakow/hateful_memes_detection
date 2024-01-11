@@ -40,9 +40,7 @@ def evaluate_predictions(data_path: str) -> Dict[str, Any]:
 
     pattern = r"(finetuned(?:_(\d+)_epochs)?|not_finetuned)\.json$"
     match = re.search(pattern, data_path)
-    model_name = match.group(
-        1
-    )  # match.group(1) if match and match.group(2) else match.group(1)
+    model_name = match.group(1)
 
     if "train" in data_path:
         set_var = "train"
