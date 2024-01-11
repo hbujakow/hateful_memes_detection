@@ -11,7 +11,10 @@ def create_json_entry(row: pd.Series):
     Creates a json entry for a row in the dataset.
     """
     conversation = [
-        {"from": "human", "value": "Is this meme hateful?\nAnswer this question using a single word or phrase.\n<image>"},
+        {
+            "from": "human",
+            "value": "Is this meme hateful?\nAnswer this question using a single word or phrase.\n<image>",
+        },
         {"from": "gpt", "value": "Yes" if row["label"] == 1 else "No"},
     ]
 
