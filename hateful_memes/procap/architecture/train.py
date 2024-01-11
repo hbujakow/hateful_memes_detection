@@ -78,7 +78,11 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
 
         logger.write(
             "Length of training set: %d, length of dev set: %d, length of testing set: %d"
-            % (len(train_loader.dataset), len(dev_loader.dataset), len(test_loader.dataset))
+            % (
+                len(train_loader.dataset),
+                len(dev_loader.dataset),
+                len(test_loader.dataset),
+            )
         )
         logger.write("Max length of sentences: %d" % (model.max_length))
 
@@ -177,17 +181,24 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             total_labels = torch.cat(total_labels, dim=0)
             total_labels = total_labels.cpu().detach().numpy()
 
-            train_auc = roc_auc_score(total_labels, total_logits, average='weighted') * logits_shape
+            train_auc = (
+                roc_auc_score(total_labels, total_logits, average="weighted")
+                * logits_shape
+            )
             train_auc = train_auc * 100.0 / len_train
 
-            dev_acc_query, dev_auc_query = eval_multi_model(opt, model, dev_loader, epoch + 1)
+            dev_acc_query, dev_auc_query = eval_multi_model(
+                opt, model, dev_loader, epoch + 1
+            )
             mlflow.log_metric("dev_acc_query", dev_acc_query, step=epoch + 1)
             mlflow.log_metric("dev_auc_query", dev_auc_query, step=epoch + 1)
             dev_acc, dev_auc = eval_model(opt, model, dev_loader, epoch + 1)
             mlflow.log_metric("dev_acc", dev_acc, step=epoch + 1)
             mlflow.log_metric("dev_auc", dev_auc, step=epoch + 1)
 
-            test_acc_query, test_auc_query = eval_multi_model(opt, model, test_loader, epoch + 1)
+            test_acc_query, test_auc_query = eval_multi_model(
+                opt, model, test_loader, epoch + 1
+            )
             mlflow.log_metric("test_acc_query", test_acc_query, step=epoch + 1)
             mlflow.log_metric("test_auc_query", test_auc_query, step=epoch + 1)
             test_acc, test_auc = eval_model(opt, model, test_loader, epoch + 1)
@@ -201,13 +212,16 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
 
             logger.write("Epoch %d" % (epoch + 1))
             logger.write(
-                "\ttrain_loss: %.2f, accuracy: %.2f, auc: %.2f" % (total_loss, scores * 100.0, train_auc)
+                "\ttrain_loss: %.2f, accuracy: %.2f, auc: %.2f"
+                % (total_loss, scores * 100.0, train_auc)
             )
             logger.write(
-                "\tdev multi auc: %.2f, dev accuracy multi: %.2f" % (dev_auc_query, dev_acc_query)
+                "\tdev multi auc: %.2f, dev accuracy multi: %.2f"
+                % (dev_auc_query, dev_acc_query)
             )
             logger.write(
-                "\ttest multi auc: %.2f, test accuracy multi: %.2f" % (test_auc_query, test_acc_query)
+                "\ttest multi auc: %.2f, test accuracy multi: %.2f"
+                % (test_auc_query, test_acc_query)
             )
 
         max_idx = sorted(

@@ -43,25 +43,20 @@ def main(args) -> None:
     dev_memes = dev_memes.loc[:, "img"]
     test_memes = test_memes.loc[:, "img"]
 
-    data = {
-        "train": train_memes,
-        "dev": dev_memes,
-        "test": test_memes
-    }
+    data = {"train": train_memes, "dev": dev_memes, "test": test_memes}
 
     categories = {
-        "race": 'what is the race of the person in the image?',
-        "gender": 'what is the gender of the person in the image?',
-        'valid_animal': "is there an animal in the image?",
-        'valid_person': 'is there a person in the image?',
-        "country": 'which country does the person in the image come from?',
-        "animal": 'what animal is in the image?',
+        "race": "what is the race of the person in the image?",
+        "gender": "what is the gender of the person in the image?",
+        "valid_animal": "is there an animal in the image?",
+        "valid_person": "is there a person in the image?",
+        "country": "which country does the person in the image come from?",
+        "animal": "what animal is in the image?",
         "valid_disable": "are there disabled people in the image?",
         "religion": "what is the religion of the person in the image?",
     }
 
     generic_caption = {"generic": "describe briefly what is in the image"}
-
 
     print(f"Part for: {categories.keys()}")
 
@@ -74,10 +69,8 @@ def main(args) -> None:
         if data_split == "test" and generic_caption != {}:
             categories.update(generic_caption)
 
-        for category, question in tqdm(
-        categories.items(), position=0
-        ):
-            print('Generating captions for: ', category)
+        for category, question in tqdm(categories.items(), position=0):
+            print("Generating captions for: ", category)
             captions = {}
             for i, path in enumerate(dataset):
                 if i % 250 == 0:
@@ -85,7 +78,7 @@ def main(args) -> None:
                         f"Already preprocessing {i*100/len(dataset):2f}% of the {data_split} dataset"
                     )
                 # image = Image.open(os.path.join(data_path, "inpainted", path))
-                image = Image.open(os.path.join(data_path, path)) # not inpainted
+                image = Image.open(os.path.join(data_path, path))  # not inpainted
                 caption = generate_prompt_result(
                     model, vis_processors, device, image, question
                 )
