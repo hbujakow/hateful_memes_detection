@@ -60,6 +60,7 @@ def parse_opt():
 
     parser.add_argument("--DEBUG", type=bool, default=False)
     parser.add_argument("--SAVE", type=bool, default=True)
+    parser.add_argument('--SAVE_PROBS', type=bool, default=True)
     parser.add_argument(
         "--SAVE_NUM", type=str, default=datetime.now().strftime("%Y%m%d_%H%M")
     )

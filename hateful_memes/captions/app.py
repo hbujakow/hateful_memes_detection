@@ -3,7 +3,8 @@ from io import BytesIO
 
 import torch
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from lavis.models import load_model_and_preprocess
 from PIL import Image
 from pydantic import BaseModel
@@ -14,6 +15,27 @@ model, vis_processors, _ = load_model_and_preprocess(
 )
 
 app = FastAPI()
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"message": exc.detail},
+    )
+
+@app.exception_handler(ValueError)
+async def http_exception_handler(request: Request, exc: ValueError):
+    return JSONResponse(
+        status_code=400,
+        content={"message": exc.args[0]},
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"message": "Internal Server Error"},
+    )
 
 person_categories = {
     "race": "what is the race of the person in the image?",
@@ -41,70 +63,55 @@ class InputData(BaseModel):
 
     image: str
 
-
 @app.post("/generate_captions")
 async def predict(image: InputData):
-    im = Image.open(BytesIO(base64.b64decode((image.image))))
-
+    im = Image.open(BytesIO(base64.b64decode((image.image)))).convert("RGB")
     captions = {}
-    try:
-        person_on_img = generate_prompt_result(
-            model, vis_processors, device, im, "is there a person in the image?"
-        )
-        is_person = person_on_img.startswith("yes")
 
-        if is_person:
-            for category, questions in person_categories.items():
-                caption = generate_prompt_result(
-                    model, vis_processors, device, im, questions
-                )
-                captions[category] = caption
+    generic_caption = generate_prompt_result(
+        model, vis_processors, device, im, "describe briefly what is in the image"
+    )
+    captions["generic"] = generic_caption
 
-            not_disabled = generate_prompt_result(
-                model,
-                vis_processors,
-                device,
-                im,
-                "are there disabled people in the image?",
-            )
-            if not not_disabled:
-                captions["valid_disabled"] = "there is a disabled person"
+    person_on_img = generate_prompt_result(
+        model, vis_processors, device, im, "is there a person in the image?"
+    )
+    is_person = person_on_img.startswith("yes")
 
-        animal_on_img = generate_prompt_result(
-            model, vis_processors, device, im, "is there an animal in the image?"
-        )
-        is_animal = animal_on_img.startswith("yes")
-
-        if is_animal:
+    if is_person:
+        for category, questions in person_categories.items():
             caption = generate_prompt_result(
-                model, vis_processors, device, im, "what animal is in the image?"
+                model, vis_processors, device, im, questions
             )
-            captions["animal"] = caption
+            captions[category] = caption
 
-        response = ""
-        for category in "race,gender,country,animal,valid_disable,religion".split(","):
-            if category not in captions:
-                continue
-            response += captions[category] + " . "
-        return {"caption": response}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/generic_caption")
-async def generate_generic_caption(image: InputData):
-    im = Image.open(BytesIO(base64.b64decode((image.image))))
-
-    try:
-        generic_caption = generate_prompt_result(
-            model, vis_processors, device, im, "describe briefly what is in the image"
+        not_disabled = generate_prompt_result(
+            model,
+            vis_processors,
+            device,
+            im,
+            "are there disabled people in the image?",
         )
+        if not not_disabled:
+            captions["valid_disabled"] = "there is a disabled person"
 
-        return {"generic_caption": generic_caption}
+    animal_on_img = generate_prompt_result(
+        model, vis_processors, device, im, "is there an animal in the image?"
+    )
+    is_animal = animal_on_img.startswith("yes")
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    if is_animal:
+        caption = generate_prompt_result(
+            model, vis_processors, device, im, "what animal is in the image?"
+        )
+        captions["animal"] = caption
+
+    response = ""
+    for category in "generic,race,gender,country,animal,valid_disable,religion".split(","):
+        if category not in captions:
+            continue
+        response += captions[category] + " . "
+    return {"caption": response}
 
 
 if __name__ == "__main__":

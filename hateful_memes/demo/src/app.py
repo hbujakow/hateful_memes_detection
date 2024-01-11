@@ -1,5 +1,4 @@
 import base64
-import os
 import time
 from io import BytesIO
 
@@ -30,19 +29,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-buffered = BytesIO()
-
 
 def call_inpaint_image_api(image, extract_text=True):
     """
     Inpaints the image. Optionally, returns the text extracted from image with OCR.
     """
-    image.save("temp_img.png")
-    with open("temp_img.png", "rb") as f:
-        encoded_image = base64.b64encode(f.read()).decode("utf-8")
+    inpaint_buffer = BytesIO()
+    image.save(inpaint_buffer, format="PNG")
+    image_bytes = inpaint_buffer.getvalue()
+    encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
     payload = {"image": encoded_image}
-    os.remove("temp_img.png")
 
     response = requests.post(config.INPAINT_API_URL, json=payload)
 
@@ -61,12 +58,12 @@ def call_caption_api(inpainted_image):
     """
     Generates captions for the inpainted image.
     """
-    inpainted_image.save("inpainted_temp_img.png")
-    with open("inpainted_temp_img.png", "rb") as inpainted_image:
-        encoded_image = base64.b64encode(inpainted_image.read()).decode("utf-8")
+    caption_buffer = BytesIO()
+    inpainted_image.save(caption_buffer, format="PNG")
+    image_bytes = caption_buffer.getvalue()
+    encoded_image = base64.b64encode(image_bytes).decode("utf-8")
 
     payload = {"image": encoded_image}
-    os.remove("inpainted_temp_img.png")
     try:
         response = requests.post(config.CAPTION_API_URL, json=payload)
     except Exception as e:
@@ -96,7 +93,6 @@ def call_procap_api(caption):
 
 
 def main():
-
     st.title("Detecting harmful and offensive content in memes")
 
     uploaded_file = st.file_uploader(

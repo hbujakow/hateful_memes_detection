@@ -55,7 +55,7 @@ def log_hyperpara(logger, opt):
 
 def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
     with mlflow.start_run(
-        run_name=f"{opt.MODEL_NAME.replace('-', '_')}_{opt.SAVE_NUM}"
+        run_name=f"{opt.MODEL_NAME.replace('-', '_').replace('/', '_')}_{opt.SAVE_NUM}"
     ):
         mlflow.log_params(vars(opt))
 
@@ -72,7 +72,7 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             os.mkdir(log_path)
 
         logger = utils.Logger(
-            os.path.join(log_path, opt.SAVE_NUM + opt.MODEL_NAME + ".txt")
+            os.path.join(log_path, opt.SAVE_NUM + opt.MODEL_NAME.replace('-', '_').replace('/', '_') + ".txt")
         )
         log_hyperpara(logger, opt)
 
@@ -142,9 +142,11 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             model.train(True)
             total_loss = 0.0
             scores = 0.0
-            for i, batch in enumerate(train_loader):
+            total_logits = []
+            total_labels = []
+            for _, batch in enumerate(train_loader):
                 # break
-                # label = batch["label"].float().cuda().view(-1, 1)
+                label = batch["label"].float().cuda().view(-1, 1)
                 target = batch["target"].cuda()
 
                 if opt.USE_DEMO:
@@ -153,6 +155,9 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
                     text = batch["test_all_text"]  # without demonstrations
 
                 logits = model(text)
+
+                total_logits.append(F.softmax(logits, dim=-1)[:, 1].unsqueeze(-1))
+                total_labels.append(label)
 
                 loss = bce_for_loss(logits, target)
                 batch_score = compute_score(logits, target)
@@ -169,6 +174,7 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             mlflow.log_metric(
                 "train_loss", total_loss.item() / len(train_loader), step=epoch + 1
             )
+
 
             model.train(False)
             len_train = len(train_loader.dataset)
@@ -206,6 +212,7 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             mlflow.log_metric("test_auc", test_auc, step=epoch + 1)
 
             mlflow.log_metric("train_acc", scores * 100.0, step=epoch + 1)
+            mlflow.log_metric("train_auc", train_auc, step=epoch + 1)
 
             dev_record_auc.append(dev_auc_query)
             dev_record_acc.append(dev_acc_query)
@@ -229,7 +236,7 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             key=lambda k: dev_record_auc[k] + dev_record_acc[k],
             reverse=True,
         )[0]
-        logger.write("Maximum epoch: %d" % (max_idx))
+        logger.write("Maximum epoch: %d" % (max_idx + 1))
         logger.write(
             "\tdev evaluation auc: %.2f, dev accuracy: %.2f"
             % (dev_record_auc[max_idx], dev_record_acc[max_idx])
@@ -237,10 +244,10 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
         if opt.SAVE:
             torch.save(
                 model.state_dict(),
-                os.path.join(model_path, opt.SAVE_NUM + opt.MODEL_NAME + ".pth"),
+                os.path.join(model_path, opt.SAVE_NUM + '_' + opt.MODEL_NAME.replace('-', '_').replace('/', '_') + ".pth"),
             )
             mlflow.pytorch.log_model(
-                model, f"{opt.MODEL_NAME.replace('-', '_')}_{opt.SAVE_NUM}"
+                model, f"{opt.MODEL_NAME.replace('-', '_').replace('/', '_')}_{opt.SAVE_NUM}"
             )
 
 
@@ -252,6 +259,7 @@ def eval_model(opt, model, data_loader, epoch_num):
     total_logits = []
     total_labels = []
     total_probs = []
+
     for _, batch in enumerate(data_loader):
         with torch.no_grad():
             label = batch["label"].float().cuda().view(-1, 1)
@@ -266,15 +274,24 @@ def eval_model(opt, model, data_loader, epoch_num):
             logits = model(text)
             batch_score = compute_score(logits, target)
             scores += batch_score
-            norm_logits = F.softmax(logits, dim=-1)[:, 1].unsqueeze(-1)
+            probs = F.softmax(logits, dim=-1)
+            norm_logits = probs[:, 1].unsqueeze(-1)
             # bz = target.shape[0]
             total_logits.append(norm_logits)
             total_labels.append(label)
+            total_probs.append(probs)
     total_logits = torch.cat(total_logits, dim=0)
     total_labels = torch.cat(total_labels, dim=0)
-    print(total_logits.shape, total_labels.shape)
+    total_probs = torch.cat(total_probs, dim=0)
+
+    if epoch_num == opt.EPOCHS:
+        path_to_save = f'/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/architecture/logits_probs/{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}'
+        if not os.path.exists(path_to_save):
+            os.mkdir(path_to_save)
+        torch.save(total_logits, os.path.join(path_to_save, f'logits_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs{opt.EPOCHS}.pkl'))
+        torch.save(total_probs, os.path.join(path_to_save, f'probs_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}.pkl'))
+
     auc = compute_auc_score(total_logits, total_labels)
-    # print (auc)
     return scores * 100.0 / len_data, auc * 100.0 / len_data
 
 
@@ -321,6 +338,13 @@ def eval_multi_model(opt, model, data_loader, epoch_num):
     logits = torch.cat(logits, dim=0)
     labels = torch.cat(labels, dim=0)
     probs = torch.cat(probs, dim=0)
+
+    if epoch_num == opt.EPOCHS:
+        path_to_save = f'/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/architecture/logits_probs/{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}'
+        if not os.path.exists(path_to_save):
+            os.mkdir(path_to_save)
+        torch.save(logits, os.path.join(path_to_save, f'logits_query_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs{opt.EPOCHS}.pkl'))
+        torch.save(probs, os.path.join(path_to_save, f'probs_query_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}.pkl'))
 
     scores = compute_scaler_score(probs, labels)
     auc = compute_auc_score(logits, labels)
