@@ -3,10 +3,10 @@ import os
 import time
 from io import BytesIO
 
+import config
 import requests
 import streamlit as st
 from PIL import Image
-import config
 
 st.set_page_config(
     layout="wide",
