@@ -27,6 +27,7 @@ if __name__ == "__main__":
     set_seed(opt.SEED)
 
     train_set = MultiModalData(opt, "train")
+    dev_set = MultiModalData(opt, "dev")
     test_set = MultiModalData(opt, "test")
 
     max_length = opt.LENGTH + opt.CAP_LENGTH
@@ -43,7 +44,8 @@ if __name__ == "__main__":
     model = PromptHateModel(label_words, max_length, model_name=opt.MODEL_NAME).cuda()
 
     train_loader = DataLoader(train_set, opt.BATCH_SIZE, shuffle=True, num_workers=2)
+    dev_loader = DataLoader(dev_set, opt.BATCH_SIZE, shuffle=False, num_workers=2)
     test_loader = DataLoader(test_set, opt.BATCH_SIZE, shuffle=False, num_workers=2)
-    train_for_epoch(opt, model, train_loader, test_loader)
+    train_for_epoch(opt, model, train_loader, dev_loader, test_loader)
 
     exit(0)

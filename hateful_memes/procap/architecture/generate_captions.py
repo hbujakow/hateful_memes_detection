@@ -43,7 +43,11 @@ def main(args) -> None:
     dev_memes = dev_memes.loc[:, "img"]
     test_memes = test_memes.loc[:, "img"]
 
-    data = {"train": train_memes, "dev": dev_memes, "test": test_memes}
+    data = {
+        "train": train_memes,
+        "dev": dev_memes,
+        "test": test_memes
+    }
 
     categories = {
         "race": 'what is the race of the person in the image?',
@@ -63,23 +67,25 @@ def main(args) -> None:
 
     for data_split, dataset in tqdm(
         data.items(),
-        desc=f"Generating captions [{category}]",
+        desc="Generating captions",
         position=1,
         leave=False,
     ):
-        if data_split == "test": # for test set we need to generate generic captions ourselves
+        if data_split == "test" and generic_caption != {}:
             categories.update(generic_caption)
 
         for category, question in tqdm(
-        categories.items(), desc="Generating captions for categories", position=0
+        categories.items(), position=0
         ):
+            print('Generating captions for: ', category)
             captions = {}
             for i, path in enumerate(dataset):
                 if i % 250 == 0:
                     print(
                         f"Already preprocessing {i*100/len(dataset):2f}% of the {data_split} dataset"
                     )
-                image = Image.open(os.path.join(data_path, "inpainted", path))
+                # image = Image.open(os.path.join(data_path, "inpainted", path))
+                image = Image.open(os.path.join(data_path, path)) # not inpainted
                 caption = generate_prompt_result(
                     model, vis_processors, device, image, question
                 )

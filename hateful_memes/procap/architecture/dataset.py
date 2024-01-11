@@ -65,14 +65,14 @@ class MultiModalData:
                 self.opt.IMG_VERSION + "_captions.pkl",
             )
         elif self.opt.CAP_TYPE == "vqa":
-            cap_path = os.path.join(self.opt.CAPTION_PATH, mode + "_generic.pkl")
+            cap_path = os.path.join(self.opt.CAPTION_PATH, f"generic_{mode}.pkl")
             if self.opt.ASK_CAP != "":
                 questions = self.opt.ASK_CAP.split(",")
                 result_files = {
                     q: load_pkl(
                         os.path.join(
                             self.opt.CAPTION_PATH,
-                            q + "_" + mode + ".pkl",
+                            f"{q}_{mode}.pkl",
                         )
                     )
                     for q in questions
@@ -83,7 +83,7 @@ class MultiModalData:
                     result_files[v] = load_pkl(
                         os.path.join(
                             self.opt.CAPTION_PATH,
-                            v + "_" + mode + ".pkl",
+                            f"{v}_{mode}.pkl",
                         )
                     )
 

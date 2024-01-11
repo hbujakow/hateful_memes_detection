@@ -53,7 +53,7 @@ def log_hyperpara(logger, opt):
         logger.write(k + " : " + str(v))
 
 
-def train_for_epoch(opt, model, train_loader, test_loader):
+def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
     with mlflow.start_run(
         run_name=f"{opt.MODEL_NAME.replace('-', '_')}_{opt.SAVE_NUM}"
     ):
@@ -77,8 +77,8 @@ def train_for_epoch(opt, model, train_loader, test_loader):
         log_hyperpara(logger, opt)
 
         logger.write(
-            "Length of training set: %d, length of testing set: %d"
-            % (len(train_loader.dataset), len(test_loader.dataset))
+            "Length of training set: %d, length of dev set: %d, length of testing set: %d"
+            % (len(train_loader.dataset), len(dev_loader.dataset), len(test_loader.dataset))
         )
         logger.write("Max length of sentences: %d" % (model.max_length))
 
@@ -132,9 +132,8 @@ def train_for_epoch(opt, model, train_loader, test_loader):
             optim, num_warmup_steps=0, num_training_steps=num_training_steps
         )
 
-        # start training
-        record_auc = []
-        record_acc = []
+        dev_record_auc = []
+        dev_record_acc = []
         for epoch in range(opt.EPOCHS):
             model.train(True)
             total_loss = 0.0
@@ -168,35 +167,58 @@ def train_for_epoch(opt, model, train_loader, test_loader):
             )
 
             model.train(False)
-            scores /= len(train_loader.dataset)
-            if opt.USE_DEMO and opt.MULTI_QUERY:
-                eval_acc, eval_auc = eval_multi_model(opt, model)
-            else:
-                eval_acc, eval_auc = eval_model(opt, model, test_loader)
-            mlflow.log_metric("eval_acc", eval_acc, step=epoch + 1)
-            mlflow.log_metric("eval_auc", eval_auc, step=epoch + 1)
+            len_train = len(train_loader.dataset)
+            scores /= len_train
+
+            total_logits = torch.cat(total_logits, dim=0)
+            total_logits = total_logits.cpu().detach().numpy()
+            logits_shape = total_logits.shape[0]
+
+            total_labels = torch.cat(total_labels, dim=0)
+            total_labels = total_labels.cpu().detach().numpy()
+
+            train_auc = roc_auc_score(total_labels, total_logits, average='weighted') * logits_shape
+            train_auc = train_auc * 100.0 / len_train
+
+            dev_acc_query, dev_auc_query = eval_multi_model(opt, model, dev_loader, epoch + 1)
+            mlflow.log_metric("dev_acc_query", dev_acc_query, step=epoch + 1)
+            mlflow.log_metric("dev_auc_query", dev_auc_query, step=epoch + 1)
+            dev_acc, dev_auc = eval_model(opt, model, dev_loader, epoch + 1)
+            mlflow.log_metric("dev_acc", dev_acc, step=epoch + 1)
+            mlflow.log_metric("dev_auc", dev_auc, step=epoch + 1)
+
+            test_acc_query, test_auc_query = eval_multi_model(opt, model, test_loader, epoch + 1)
+            mlflow.log_metric("test_acc_query", test_acc_query, step=epoch + 1)
+            mlflow.log_metric("test_auc_query", test_auc_query, step=epoch + 1)
+            test_acc, test_auc = eval_model(opt, model, test_loader, epoch + 1)
+            mlflow.log_metric("test_acc", test_acc, step=epoch + 1)
+            mlflow.log_metric("test_auc", test_auc, step=epoch + 1)
+
             mlflow.log_metric("train_acc", scores * 100.0, step=epoch + 1)
 
-            record_auc.append(eval_auc)
-            record_acc.append(eval_acc)
+            dev_record_auc.append(dev_auc_query)
+            dev_record_acc.append(dev_acc_query)
 
             logger.write("Epoch %d" % (epoch + 1))
             logger.write(
-                "\ttrain_loss: %.2f, accuracy: %.2f" % (total_loss, scores * 100.0)
+                "\ttrain_loss: %.2f, accuracy: %.2f, auc: %.2f" % (total_loss, scores * 100.0, train_auc)
             )
             logger.write(
-                "\tevaluation auc: %.2f, accuracy: %.2f" % (eval_auc, eval_acc)
+                "\tdev multi auc: %.2f, dev accuracy multi: %.2f" % (dev_auc_query, dev_acc_query)
+            )
+            logger.write(
+                "\ttest multi auc: %.2f, test accuracy multi: %.2f" % (test_auc_query, test_acc_query)
             )
 
         max_idx = sorted(
-            range(len(record_auc)),
-            key=lambda k: record_auc[k] + record_acc[k],
+            range(len(dev_record_auc)),
+            key=lambda k: dev_record_auc[k] + dev_record_acc[k],
             reverse=True,
         )[0]
         logger.write("Maximum epoch: %d" % (max_idx))
         logger.write(
-            "\tevaluation auc: %.2f, accuracy: %.2f"
-            % (record_auc[max_idx], record_acc[max_idx])
+            "\tdev evaluation auc: %.2f, dev accuracy: %.2f"
+            % (dev_record_auc[max_idx], dev_record_acc[max_idx])
         )
         if opt.SAVE:
             torch.save(
@@ -208,14 +230,15 @@ def train_for_epoch(opt, model, train_loader, test_loader):
             )
 
 
-def eval_model(opt, model, test_loader):
+def eval_model(opt, model, data_loader, epoch_num):
     scores = 0.0
     auc = 0.0
-    len_data = len(test_loader.dataset)
+    len_data = len(data_loader.dataset)
     print("Length of test set:", len_data)
     total_logits = []
     total_labels = []
-    for _, batch in enumerate(test_loader):
+    total_probs = []
+    for _, batch in enumerate(data_loader):
         with torch.no_grad():
             label = batch["label"].float().cuda().view(-1, 1)
             target = batch["target"].cuda()
@@ -241,17 +264,15 @@ def eval_model(opt, model, test_loader):
     return scores * 100.0 / len_data, auc * 100.0 / len_data
 
 
-def eval_multi_model(opt, model):
+def eval_multi_model(opt, model, data_loader, epoch_num):
     num_queries = opt.NUM_QUERIES
     labels_record = {}
     logits_record = {}
     prob_record = {}
     for k in range(num_queries):
-        test_set = MultiModalData(opt, "test")
-        test_loader = DataLoader(test_set, opt.BATCH_SIZE, shuffle=False, num_workers=2)
-        len_data = len(test_loader.dataset)
+        len_data = len(data_loader.dataset)
         print("Length of test set:", len_data, "Query:", k)
-        for i, batch in enumerate(test_loader):
+        for i, batch in enumerate(data_loader):
             with torch.no_grad():
                 label = batch["label"].float().cuda().view(-1, 1)
                 img = batch["img"]
