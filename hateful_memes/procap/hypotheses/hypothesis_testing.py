@@ -5,7 +5,7 @@ from de_long_test import delong_roc_test
 
 
 def main(args):
-    data = pd.read_json(args.datapath_path, lines=True)
+    data = pd.read_json(args.data_path, lines=True)
     true_labels = data[args.labels_name].values
     probas_model1 = torch.load(args.probas_first_model_path).cpu()[:, 1]
     probas_model2 = torch.load(args.probas_second_model_path).cpu()[:, 1]
