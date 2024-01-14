@@ -78,16 +78,16 @@ def fastDeLong(predictions_sorted_transposed, label_1_count):
 
 
 def calc_pvalue(aucs, sigma):
-    """Computes log(10) of p-values.
+    """Computes p-value.
     Args:
        aucs: 1D array of AUCs
        sigma: AUC DeLong covariances
     Returns:
-       log10(pvalue)
+       p-value
     """
     l = np.array([[1, -1]])
     z = np.abs(np.diff(aucs)) / np.sqrt(np.dot(np.dot(l, sigma), l.T))
-    return np.log10(2) + scipy.stats.norm.logsf(z, loc=0, scale=1) / np.log(10)
+    return 10**(np.log10(2) + scipy.stats.norm.logsf(z, loc=0, scale=1) / np.log(10))
 
 
 def compute_ground_truth_statistics(ground_truth):
