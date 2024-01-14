@@ -83,11 +83,11 @@ def calc_pvalue(aucs, sigma):
        aucs: 1D array of AUCs
        sigma: AUC DeLong covariances
     Returns:
-       p-value
+       test p-value
     """
     l = np.array([[1, -1]])
     z = np.abs(np.diff(aucs)) / np.sqrt(np.dot(np.dot(l, sigma), l.T))
-    return 10**(np.log10(2) + scipy.stats.norm.logsf(z, loc=0, scale=1) / np.log(10))
+    return 2 * (1 - scipy.stats.norm.cdf(z, loc=0, scale=1))
 
 
 def compute_ground_truth_statistics(ground_truth):
