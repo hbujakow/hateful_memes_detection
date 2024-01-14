@@ -37,13 +37,13 @@ if __name__ == "__main__":
         "--probas-first-model-path",
         type=str,
         default="/home2/faculty/wjakubowski/memes_analysis/data/averaged_probs/inpainted/vinai_bertweet_large_epochs_15_avg_probs.pt",
-        help="Probabilities for the second class predicted by the first model"
+        help="Probabilities for the second class predicted by the first model",
     )
     parser.add_argument(
         "--probas-second-model-path",
         type=str,
         default="/home2/faculty/wjakubowski/memes_analysis/data/averaged_probs/not_inpainted/vinai_bertweet_large_epochs_15_avg_probs.pt",
-        help="Probabilities for the second class predicted by the second model"
+        help="Probabilities for the second class predicted by the second model",
     )
     args = parser.parse_args()
 

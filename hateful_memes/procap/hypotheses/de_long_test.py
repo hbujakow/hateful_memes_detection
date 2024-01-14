@@ -1,6 +1,4 @@
-# FROM: https://github.com/yandexdataschool/roc_comparison/blob/master/compare_auc_delong_xu.py
-
-import pandas as pd
+# Adapted from: https://github.com/yandexdataschool/roc_comparison/blob/master/compare_auc_delong_xu.py
 import numpy as np
 import scipy.stats
 
