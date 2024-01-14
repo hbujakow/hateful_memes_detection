@@ -1,5 +1,6 @@
 import os
 import pickle
+import argparse
 import numpy as np
 import torch
 from typing import List
@@ -38,14 +39,14 @@ def calculate_average_probs(input_data_dir: str, output_data_dir: str, model_typ
 
         avg_probs /= num_seeds
         
-        output_file = os.path.join(output_data_dir, inpainting_type, model_type, "avg_probs.pt")
+        output_file = os.path.join(output_data_dir, inpainting_type, model_type +  "_avg_probs.pt")
         torch.save(torch.tensor(avg_probs), output_file)
 
 def main(args):
     input_data_dir = args.input_data_dir
-    output_dir = args.output_data_dir
+    output_data_dir = args.output_data_dir
     seed_list = [1111, 2222, 3333, 4444, 5555]
-    model_type_list = get_subdirectories(input_data_dir)
+    model_type_list = get_subdirectories(input_data_dir + "/seed_1111/inpainted")
 
     inpainted_avg_probs = calculate_average_probs(input_data_dir, output_data_dir, model_type_list, "inpainted", seed_list)
     not_inpainted_avg_probs = calculate_average_probs(input_data_dir, output_data_dir, model_type_list, "not_inpainted", seed_list)
