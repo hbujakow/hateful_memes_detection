@@ -13,7 +13,7 @@ Download the repository and install packages as described in [here](https://gith
 3. Run the finetuning script `finetune_task.sh` (modify the paths and training specifications accordingly to your needs).
 *Optional*: In order to report the training process in Weights&Biases:
     - create account in the W&B domain,
-    - copy API key from [here](https://wandb.ai/settings#api) and paste it in the `generate_predictions.sh`,
+    - copy API key from [here](https://wandb.ai/settings#api) and paste it in the `finetune_task.sh`,
     - uncommment the line with `reports_to` argument in the script.
 
 ## Evaluation
