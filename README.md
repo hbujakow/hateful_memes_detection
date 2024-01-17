@@ -11,10 +11,10 @@ The project follows a well-organized folder structure for clarity and maintainab
 - **data:** Contains subdirectories for storing images and captions.
 - **hateful_memes:**
   - **captions:** API for handling captions. Refer to [README.md](hateful_memes/captions/README.md) for setup and requirements.
-  - **inpainting:** API for inpainting. Refer to [README.md](hateful_memes/inpainting/README.md) for setup and requirements.
+  - **inpainting:** API for inpainting. Refer to [README.md](hateful_memes/inpainting/api/README.md) for setup and requirements.
   - **demo:** Contains the web application source code.
   - **llava:** Module for fine-tuning and evaluating the Visual Large Language Model (LLaVA). Refer to [README.md](hateful_memes/llava/README.md) for setup and requirements.
-  - **procap:** API and module for training and evaluating the ProCap model. Refer to [README.md](hateful_memes/procap/README.md) for setup and requirements.
+  - **procap:** API ([README.md](hateful_memes/procap/api/README.md) with setup) and module for training and evaluating the ProCap model. Refer to [README.md](hateful_memes/procap/architecture/README.md) for setup and requirements for training and evaluation module.
 - **tests:** Holds unit and integration tests for the project.
 
 ## Essential Configuration Files
