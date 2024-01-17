@@ -29,7 +29,6 @@ The project follows a well-organized folder structure for clarity and maintainab
 - [Hubert Bujakowski](https://github.com/hbujakow)
 - [Mikołaj Gałkowski](https://github.com/galkowskim)
 - [Wiktor Jakubowski](https://github.com/WJakubowsk)
-- ...
 
 ## Getting Started
 
