@@ -21,10 +21,9 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--tested_functionality",
+        "--tested-functionality",
         type=str,
-        choices=["inpainting", "distillation"],
-        default="inpainting",
+        default="now",
         help="Functionality of proposed solution to test.",
     )
     parser.add_argument(
