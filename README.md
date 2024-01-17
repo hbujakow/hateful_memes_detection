@@ -22,7 +22,6 @@ The project follows a well-organized folder structure for clarity and maintainab
 - **.gitignore:** Specifies files and directories ignored by the version control system.
 - **.isort.cfg:** Configuration file for the [isort](https://pycqa.github.io/isort/) tool, ensuring consistent and organized library sorting.
 - **.pre-commit-config.yaml:** Configuration file for pre-commit hooks that enforce checks for code quality and formatting, following [PEP8 standards](https://peps.python.org/pep-0008/).
-- **README.md:** This file – provides essential documentation and information about the project.
 
 ## Authors
 
