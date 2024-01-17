@@ -135,12 +135,28 @@ def main():
         except Exception:
             col1.write("Classification failed. Please try again.")
             return
+
         col1.write("Classifying complete.")
 
         col2.markdown("#### Results:")
 
         col2.markdown("Extracted text:")
-        col2.markdown(f"```\n{text}\n```")
+
+        user_input = st.text_area("Modify text if needed:", value=text)
+        col2.markdown(f"```\n{user_input}\n```")
+
+        if st.button("Apply changes"):
+            input_text = (
+                user_input + " . " + "It was <mask>" + " . " + caption + " . </s>"
+            )
+            try:
+                with st.spinner("Classifying meme..."):
+                    procap_results = call_procap_api(input_text)
+
+            except Exception:
+                col1.write("Classification failed. Please try again.")
+                return
+            col1.write("Classifying complete.")
 
         col2.markdown("Text to be analyzed:")
         col2.markdown(f"```\n{input_text}\n```")
