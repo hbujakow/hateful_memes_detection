@@ -49,10 +49,13 @@ def calculate_average_probs(
                             else:
                                 avg_probs[model_type] += probs
         avg_probs[model_type] /= num_seeds
-        output_file = os.path.join(
-            output_data_dir, inpainting_type, f"{model_type}_avg_probs.pt"
+        output_dir = os.path.join(output_data_dir, inpainting_type)
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        torch.save(
+            torch.tensor(avg_probs[model_type]),
+            output_dir + f"/{model_type}_avg_probs.pt",
         )
-        torch.save(torch.tensor(avg_probs[model_type]), output_file)
 
 
 def main(args):
@@ -79,7 +82,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--output-data-dir",
         type=str,
-        default="/home2/faculty/wjakubowski/memes_analysis/data/averaged_probs",
+        default="/home2/faculty/wjakubowski/memes_analysis/data/procap_averaged_probs",
     )
     args = parser.parse_args()
 

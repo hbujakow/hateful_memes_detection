@@ -1,7 +1,7 @@
 import argparse
 import pandas as pd
 import torch
-from de_long_test import delong_roc_test
+from delong_test import delong_roc_test
 
 
 def main(args):
@@ -13,7 +13,7 @@ def main(args):
     p_value = delong_roc_test(true_labels, probas_model1, probas_model2)
     print(
         "DeLong test of {} functionality returned p_value = {}".format(
-            args.tested_functionality, p_value
+            args.test, p_value
         )
     )
 
@@ -21,9 +21,9 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--tested-functionality",
+        "--test",
         type=str,
-        default="now",
+        default="de_long_test",
         help="Functionality of proposed solution to test.",
     )
     parser.add_argument(
