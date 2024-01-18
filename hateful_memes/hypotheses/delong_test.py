@@ -1,4 +1,4 @@
-# ADPTED FROM: https://github.com/yandexdataschool/roc_comparison/
+# ADAPTED FROM: https://github.com/yandexdataschool/roc_comparison/
 import numpy as np
 import scipy.stats
 
