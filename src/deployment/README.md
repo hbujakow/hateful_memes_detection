@@ -12,17 +12,15 @@ az login
 az account set --subscription "your-azure-subscription"
 ```
 
-2. **Create resource group and container registry** using Azure client commands:
+2. **Create resource group and container registry** using Azure client command:
 ```bash
-az group create --name memes-resource-group --location WestEurope
-az acr create --resource-group memes-resource-group --name memes-conatiner-registry --sku Free
-
+az acr create --resource-group memes_rg --name memes-conatiner-registry --sku Free
 ```
 
 3. **Build Docker image and push the container to Azure Container Registry** using Docker commands.
 ```bash
 cd ../demo/ # navigate to demo folder
-docker build -t memes-conatiner-registry.azurecr.io/hateful_memes_app .
+docker build -t memes-container-registry.azurecr.io/hateful_memes_app .
 docker push memes-container-registry.azurecr.io/hateful_memes_app
 ```
 
