@@ -140,12 +140,13 @@ def main():
 
         col2.markdown("#### Results:")
 
-        col2.markdown("Extracted text:")
+        user_input = col2.markdown(
+            "<div style='font-size: 16px;'>Modify extracted OCR text if needed:</div>",
+            unsafe_allow_html=True,
+        )
+        user_input = col2.text_area("", value=text)
 
-        user_input = st.text_area("Modify text if needed:", value=text)
-        col2.markdown(f"```\n{user_input}\n```")
-
-        if st.button("Apply changes"):
+        if col2.button("Apply changes"):
             input_text = (
                 user_input + " . " + "It was <mask>" + " . " + caption + " . </s>"
             )
