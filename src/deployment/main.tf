@@ -1,17 +1,18 @@
 provider "azurerm" {
+    features {}
 }
 
 resource "azurerm_resource_group" "memes_rg" {
   name     = "memes-resource-group"
-  location = "East US"
+  location = "West Europe"
 }
 
-resource "azurerm_container_registry" "memes_registry" {
-  name                = "memes-conatiner-registry"
-  resource_group_name = azurerm_resource_group.memes_rg.name
-  location            = azurerm_resource_group.memes_rg.location
-  sku                 = "Free"
-}
+# resource "azurerm_container_registry" "memes_registry" {
+#   name                = "memes-conatiner-registry"
+#   resource_group_name = azurerm_resource_group.memes_rg.name
+#   location            = azurerm_resource_group.memes_rg.location
+#   sku                 = "Free"
+# }
 
 resource "azurerm_app_service_plan" "memes_aps" {
   name                = "streamlit-appservice-plan"
@@ -107,7 +108,7 @@ resource "azurerm_storage_account" "memes_storage_account" {
   account_replication_type = "LRS"
 }
 
-# Configure Azure Function app settings for each API
+
 locals {
   function_app_settings = {
     PROCAP_API_URL = azurerm_function_app.classification_api.default_hostname
@@ -119,7 +120,7 @@ locals {
 # Set the function app settings
 resource "azurerm_function_app_settings" "settings" {
   name                = "example-settings"
-  resource_group_name = azurerm_resource_group.example.name
-  app_name            = azurerm_app_service.streamlit.name
+  resource_group_name = azurerm_resource_group.memes_rg.name
+  app_name            = azurerm_app_service.memes_app_service.name
   settings            = local.function_app_settings
 }
