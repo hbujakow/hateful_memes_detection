@@ -12,9 +12,11 @@ az login
 az account set --subscription "your-azure-subscription"
 ```
 
-2. **Create resource group and container registry** using Azure client commands by executing the `create_azure_registry.sh` script:
+2. **Create resource group and container registry** using Azure client commands:
 ```bash
-create_azure_registry.sh
+az group create --name memes-resource-group --location WestEurope
+az acr create --resource-group memes-resource-group --name memes-conatiner-registry --sku Free
+
 ```
 
 3. **Build Docker image and push the container to Azure Container Registry** using Docker commands.
