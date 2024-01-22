@@ -3,6 +3,8 @@
 The deployment of the system is done on the Azure cloud by utilizing Azure Cloud Function and Azure Web App services for hosting the APIs and demo web page.
 
 **Prerequisites**:
+* Valid Azure subscription.
+* Azure client installed (`az` cli).
 * Docker installed on your local computer.
 * Terraform installed on your machine. You can download and install it from [Terraform Downloads](https://www.terraform.io/downloads.html).
 
