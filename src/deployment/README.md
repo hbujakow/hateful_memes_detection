@@ -16,14 +16,16 @@ az account set --subscription "your-azure-subscription"
 
 2. **Create resource group and container registry** using Azure client command:
 ```bash
-az acr create --resource-group memes_rg --name memes-conatiner-registry --sku Free
+az group create --name memes-resource-group --location WestEurope
+az acr create --resource-group memes_rg --name memescontainerregistry --sku Basic
 ```
 
 3. **Build Docker image and push the container to Azure Container Registry** using Docker commands.
 ```bash
 cd ../demo/ # navigate to demo folder
-docker build -t memes-container-registry.azurecr.io/hateful_memes_app .
-docker push memes-container-registry.azurecr.io/hateful_memes_app
+docker login memescontainerregistry.azurecr.io
+docker build -t memescontainerregistry.azurecr.io/hateful_memes_app .
+docker push memescontainerregistry.azurecr.io/hateful_memes_app
 ```
 
 
@@ -36,7 +38,7 @@ terraform apply
 5. **Navigate** to project root folder and **create** HTTP triggers in cloud function for each API by execute the following Azure client commmands:
 ```bash
 cd <path/to/root/directory> # modify this line of code by inserting appropriate path
-az functionapp function update --name captioning_api --resource-group memes_rg --function-name inpainting_api --code inpainting/cloud_function --runtime python --handler __init__.main --authlevel anonymous
-az functionapp function update --name captioning_api --resource-group memes_rg --function-name captioning_api --code captions/cloud_function --runtime python --handler __init__.main --authlevel anonymous
-az functionapp function update --name captioning_api --resource-group memes_rg --function-name classification_api --code procap/cloud_function --runtime python --handler __init__.main --authlevel anonymous
+az functionapp function update --name captioning_api --resource-group memes_rg --function-name inpainting_api --code inpainting/cloud_function --runtime python --authlevel anonymous
+az functionapp function update --name captioning_api --resource-group memes_rg --function-name captioning_api --code captions/cloud_function --runtime python --authlevel anonymous
+az functionapp function update --name captioning_api --resource-group memes_rg --function-name classification_api --code procap/cloud_function --runtime python --authlevel anonymous
 ```
