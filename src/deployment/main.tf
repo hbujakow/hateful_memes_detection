@@ -7,13 +7,6 @@ resource "azurerm_resource_group" "memes_rg" {
   location = "West Europe"
 }
 
-# resource "azurerm_container_registry" "memes_registry" {
-#   name                = "memes-conatiner-registry"
-#   resource_group_name = azurerm_resource_group.memes_rg.name
-#   location            = azurerm_resource_group.memes_rg.location
-#   sku                 = "Free"
-# }
-
 resource "azurerm_app_service_plan" "memes_aps" {
   name                = "streamlit-appservice-plan"
   location            = azurerm_resource_group.memes_rg.location
@@ -33,7 +26,7 @@ resource "azurerm_app_service" "memes_app_service" {
   app_service_plan_id = azurerm_app_service_plan.memes_ap_service.id
 
   site_config {
-    linux_fx_version = "DOCKER|<your-docker-registry>/<streamlit-image>:latest"
+    linux_fx_version = "DOCKER|memescontainerregistry/hateful_memes_app:latest"
   }
 
   app_settings = {
@@ -117,7 +110,6 @@ locals {
   }
 }
 
-# Set the function app settings
 resource "azurerm_function_app_settings" "settings" {
   name                = "example-settings"
   resource_group_name = azurerm_resource_group.memes_rg.name
