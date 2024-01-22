@@ -11,7 +11,7 @@ The deployment of the system is done on the Azure cloud by utilizing Azure Cloud
 1. **Log in** to your Azure acount using Aure client commands:
 ```bash
 az login
-az account set --subscription "your-azure-subscription"
+az account set --subscription "your-azure-subscription-id"
 ```
 
 2. **Create resource group and container registry** using Azure client command:
@@ -31,7 +31,9 @@ docker push memescontainerregistry.azurecr.io/hateful_memes_app
 
 4. **Deploy** the infrastructure using Terraform:
 ```bash
+cd deployment # change dir to deployment folder.
 terraform init
+terraform import azurerm_resource_group.memes-resource-group /subscriptions/<your-azure-subscription-id>/resourceGroups/memes-resource-group
 terraform plan
 terraform apply
 ```
