@@ -135,12 +135,29 @@ def main():
         except Exception:
             col1.write("Classification failed. Please try again.")
             return
+
         col1.write("Classifying complete.")
 
         col2.markdown("#### Results:")
 
-        col2.markdown("Extracted text:")
-        col2.markdown(f"```\n{text}\n```")
+        user_input = col2.markdown(
+            "<div style='font-size: 16px;'>Modify extracted OCR text if needed:</div>",
+            unsafe_allow_html=True,
+        )
+        user_input = col2.text_area("", value=text)
+
+        if col2.button("Apply changes"):
+            input_text = (
+                user_input + " . " + "It was <mask>" + " . " + caption + " . </s>"
+            )
+            try:
+                with st.spinner("Classifying meme..."):
+                    procap_results = call_procap_api(input_text)
+
+            except Exception:
+                col1.write("Classification failed. Please try again.")
+                return
+            col1.write("Classifying complete.")
 
         col2.markdown("Text to be analyzed:")
         col2.markdown(f"```\n{input_text}\n```")
