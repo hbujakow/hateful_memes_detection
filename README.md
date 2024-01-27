@@ -10,11 +10,11 @@ The project follows a well-organized folder structure for clarity and maintainab
 
 - **data:** Contains subdirectories for storing images and captions.
 - **src:**
-  - **captions:** API for handling captions. Refer to [README.md](hateful_memes/captions/README.md) for setup and requirements.
-  - **inpainting:** API for inpainting. Refer to [README.md](hateful_memes/inpainting/api/README.md) for setup and requirements.
+  - **captions:** API for handling captions. Refer to [README.md](src/captions/README.md) for setup and requirements.
+  - **inpainting:** API for inpainting. Refer to [README.md](src/inpainting/api/README.md) for setup and requirements.
   - **demo:** Contains the web application source code.
-  - **llava:** Module for fine-tuning and evaluating the Visual Large Language Model (LLaVA). Refer to [README.md](hateful_memes/llava/README.md) for setup and requirements.
-  - **procap:** API ([README.md](hateful_memes/procap/api/README.md) with setup) and module for training and evaluating the ProCap model. Refer to [README.md](hateful_memes/procap/architecture/README.md) for setup and requirements for training and evaluation module.
+  - **llava:** Module for fine-tuning and evaluating the Visual Large Language Model (LLaVA). Refer to [README.md](src/llava/README.md) for setup and requirements.
+  - **procap:** API ([README.md](src/procap/api/README.md) with setup) and module for training and evaluating the ProCap model. Refer to [README.md](src/procap/architecture/README.md) for setup and requirements for training and evaluation module.
   - **hypotheses:** Scripts to perform statistical hypothesis testing of the results produced by the trained models.
 - **tests:** Holds unit and integration tests for the project.
 
@@ -34,9 +34,9 @@ The project follows a well-organized folder structure for clarity and maintainab
 
 Follow the steps below to set up and run the Memes Analysis project:
 
-1. Clone the repository: `git clone <repository-url>`
-2. Navigate to the project directory: `cd memes_analysis`
-3. Each module (captions, inpainting, llava, procap) has specific setup instructions detailed in its own `README` located within its respective module folder. Refer to the individual `README` files for module-specific instructions.
+1. Clone the repository: `git clone https://github.com/hbujakow/hateful_memes_detection`
+2. Navigate to the project directory: `cd hateful_memes_detection`
+3. Each module (captions, inpainting, llava, procap) has specific setup instructions detailed in its own `README.md` located within its respective module folder. Refer to the individual `README.md` files for module-specific instructions.
 
 ## Contribution
 
