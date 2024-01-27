@@ -41,3 +41,7 @@ Follow the steps below to set up and run the Memes Analysis project:
 ## Contribution
 
 We welcome contributions to enhance and improve the project. Feel free to open issues, submit pull requests, or reach out to the maintainers for discussion.
+
+## License
+
+This project is licensed under the MIT License.
