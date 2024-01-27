@@ -44,4 +44,4 @@ We welcome contributions to enhance and improve the project. Feel free to open i
 
 ## License
 
-The Memes Analysis project is licensed under the MIT License.
+This project is licensed under the MIT License.
