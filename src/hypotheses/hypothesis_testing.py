@@ -5,6 +5,9 @@ from delong_test import delong_roc_test
 
 
 def main(args):
+    """
+    Main function for hypothesis testing.
+    """
     data = pd.read_json(args.data_path, lines=True)
     true_labels = data[args.labels_name].values
     probas_model1 = torch.load(args.probas_first_model_path).cpu()

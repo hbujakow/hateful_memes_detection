@@ -1,12 +1,13 @@
 from pathlib import Path
 import pandas as pd
 import json
+from typing import Dict
 
 
 DATAPATH = Path(__file__).resolve().parent.parent.parent / "data"
 
 
-def create_json_entry(row: pd.Series):
+def create_json_entry(row: pd.Series) -> Dict[str, str]:
     """
     Creates a json entry for a row in the dataset.
     """

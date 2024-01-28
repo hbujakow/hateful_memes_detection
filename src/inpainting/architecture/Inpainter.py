@@ -1,7 +1,6 @@
 import argparse
 import os
 from pathlib import Path
-
 import easyocr
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +9,7 @@ import torchvision.transforms as T
 from PIL import Image, ImageDraw
 from tqdm import tqdm
 from model.networks import Generator
+from typing import List, Tuple
 
 
 DATAPATH = Path(__file__).resolve().parent.parent / "data"
@@ -19,11 +19,18 @@ plt.rcParams["figure.facecolor"] = "white"
 class ImageConverter:
     def __init__(
         self,
-        model_path=Path(__file__).resolve().parent
+        model_path: Path = Path(__file__).resolve().parent
         / "pretrained"
         / "states_pt_places2.pth",
-        device=None,
+        device: str = None,
     ):
+        """
+        Class for inpainting images and extracting text using OCR.
+        Args:
+            model_path (Path): Path to the model checkpoint.
+            device (str): Device to use for inference.
+        """
+
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         else:
@@ -33,7 +40,14 @@ class ImageConverter:
         ).to(self.device)
         self.reader = easyocr.Reader(["en"])
 
-    def upload_img(self, image=None, image_path=None):
+    def upload_img(self, image: Image.Image = None, image_path: str = None):
+        """
+        Uploads image to the inpainter.
+        Args:
+            image (Image.Image): PIL image.
+            image_path (str): Path to image.
+
+        """
         self.text = None
 
         if image is not None:
@@ -43,14 +57,24 @@ class ImageConverter:
         else:
             raise ValueError("Image or image path must be provided.")
 
-    def retrieve_text(self):
+    def retrieve_text(self) -> str:
+        """
+        Retrieves text extracted by OCR from the image.
+        """
         if self.text is None:
             self.create_mask()
         return self.text
-        # ocr_result = self.reader.readtext(np.array(self.image))
-        # return ocr_result
 
-    def create_bounding_boxes(self, ocr_mask):
+    def create_bounding_boxes(
+        self, ocr_mask: List[Tuple[float, ...], Tuple[float, ...], Tuple[float, ...]]
+    ) -> Image.Image:
+        """
+        Creates bounding boxes around the text in the image.
+        Args:
+            ocr_mask (List[Tuple[float, ...], Tuple[float, ...], Tuple[float, ...]]): OCR mask.
+        Returns:
+            Image.Image: Image with bounding boxes.
+        """
         print("Creating bounding boxes...")
         res = Image.new("L", self.image.size, 0)
 
@@ -77,13 +101,22 @@ class ImageConverter:
         self.text = " ".join(all_text) if all_text != [] else ""
         return res
 
-    def create_mask(self):
+    def create_mask(self) -> Image.Image:
+        """
+        Creates mask for the image.
+        """
         print("Creating mask...")
         ocr_result = self.reader.readtext(np.array(self.image))
         image_mask = self.create_bounding_boxes(ocr_result)
         return image_mask
 
-    def inpaint_image(self):
+    def inpaint_image(self) -> Image.Image:
+        """
+        Inpaints the image using the inpainting model.
+        Returns:
+            Image.Image: Inpainted image.
+        """
+
         print("Inpainting image...")
         ocr_result = self.reader.readtext(np.array(self.image))
         img_pil = self.image.convert("RGB")
@@ -93,11 +126,19 @@ class ImageConverter:
         inpainted_img = self.inpainting_model.infer(
             img, mask, return_vals=["inpainted"]
         )
-
         return Image.fromarray(inpainted_img)
 
 
-def generate_inpainted_images(img_dir, inpainted_img_dir, device=None):
+def generate_inpainted_images(
+    img_dir: str | Path, inpainted_img_dir: str | Path, device: str = None
+):
+    """
+    Generates inpainted images from the images in the img_dir. Saves the inpainted images to the inpainted_img_dir.
+    Args:
+        img_dir (str | Path): Path to the directory with images.
+        inpainted_img_dir (str | Path): Path to the directory where the inpainted images will be saved.
+        device (str): Device to use for inference.
+    """
     if not os.path.exists(inpainted_img_dir):
         os.mkdir(inpainted_img_dir)
 

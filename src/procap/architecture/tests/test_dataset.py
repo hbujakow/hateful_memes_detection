@@ -1,40 +1,46 @@
 import pytest
 from dataset import MultiModalData
+from datetime import datetime
+
 
 class Config:
-    def __init__(self):
-        from datetime import datetime
-        self.DATASET = "mem"
-        self.CAP_TYPE = "vqa"
-        self.MODEL_NAME = "roberta-large"
-        self.DATA = "."
-        self.CAPTION_PATH = "./captions"
-        self.LOG_PATH = "" # not needed
-        self.MODEL_PATH = "" # not needed
-        self.NUM_LABELS = 2
-        self.POS_WORD = "good"
-        self.NEG_WORD = "bad"
-        self.MULTI_QUERY = True
-        self.USE_DEMO = True
-        self.NUM_QUERIES = 4
-        self.WEIGHT_DECAY = 0.01
-        self.LR_RATE = 1e-5
-        self.EPS = 1e-8
-        self.BATCH_SIZE = 16
-        self.FIX_LAYERS = 2
-        self.NUM_SAMPLE = 1
-        self.LENGTH = 65
-        self.ASK_CAP = "race,gender,country,animal,valid_disable,religion"
-        self.CAP_LENGTH = 12
-        self.PRETRAIN_DATA = "conceptual"
-        self.IMG_VERSION = "clean"
-        self.ADD_ENT = False
-        self.ADD_DEM = False
-        self.DEBUG = False
-        self.SAVE = True
-        self.SAVE_NUM = datetime.now().strftime("%Y%m%d_%H%M")
-        self.EPOCHS = 10
-        self.SEED = 1111
+    def __init__(self) -> None:
+        self.DATASET: str = "mem"
+        self.CAP_TYPE: str = "vqa"
+        self.MODEL_NAME: str = "roberta-large"
+        self.DATA: str = "."
+        self.CAPTION_PATH: str = "./captions"
+        self.LOG_PATH: str = ""
+        self.MODEL_PATH: str = ""
+        self.NUM_LABELS: int = 2
+        self.POS_WORD: str = "good"
+        self.NEG_WORD: str = "bad"
+        self.MULTI_QUERY: bool = True
+        self.USE_DEMO: bool = True
+        self.NUM_QUERIES: int = 4
+        self.WEIGHT_DECAY: float = 0.01
+        self.LR_RATE: float = 1e-5
+        self.EPS: float = 1e-8
+        self.BATCH_SIZE: int = 16
+        self.FIX_LAYERS: int = 2
+        self.NUM_SAMPLE: int = 1
+        self.LENGTH: int = 65
+        self.ASK_CAP: str = "race,gender,country,animal,valid_disable,religion"
+        self.CAP_LENGTH: int = 12
+        self.PRETRAIN_DATA: str = "conceptual"
+        self.IMG_VERSION: str = "clean"
+        self.ADD_ENT: bool = False
+        self.ADD_DEM: bool = False
+        self.DEBUG: bool = False
+        self.SAVE: bool = True
+        self.SAVE_NUM: str = datetime.now().strftime("%Y%m%d_%H%M")
+        self.EPOCHS: int = 10
+        self.SEED: int = 1111
+
+    """
+    Config class for the dataset.
+    """
+
 
 @pytest.fixture
 def dataset():
@@ -42,7 +48,10 @@ def dataset():
     return MultiModalData(opt, mode="train")
 
 
-def test_load_entries(dataset):
+def test_load_entries(dataset: MultiModalData):
+    """
+    Test if the entries are loaded correctly.
+    """
     entries = dataset.load_entries("train")
     assert len(entries) > 0
     sample_entry = entries[0]
@@ -52,7 +61,10 @@ def test_load_entries(dataset):
     assert "cap" in sample_entry
 
 
-def test_select_context(dataset):
+def test_select_context(dataset: MultiModalData):
+    """
+    Test if the context is selected correctly.
+    """
     context_examples = [
         {"cap": "random caption 1", "meme_text": "text 1", "label": 0, "img": "1.png"},
         {"cap": "random caption 2", "meme_text": "text 2", "label": 0, "img": "2.png"},
@@ -67,7 +79,10 @@ def test_select_context(dataset):
     assert len(set(labels_count.values())) == 1
 
 
-def test_process_prompt(dataset):
+def test_process_prompt(dataset: MultiModalData):
+    """
+    Test if the prompt is processed correctly and the test text is returned.
+    """
     examples = [
         {
             "cap": "a man in a suit and a man in a suit . a black man in a suit and a white man in a suit . a man in a suit and a woman in a suit and a t-shirt with a shaved head . the person in the image is from the united states and the person in the image is from the philippines and the person in the image . a black man in a suit and a white man in a suit and a black man in a suit and a white",
@@ -100,6 +115,9 @@ def test_process_prompt(dataset):
     )
 
 
-def test_len(dataset):
+def test_len(dataset: MultiModalData):
+    """
+    Test if the length of the dataset is correct.
+    """
     length = dataset.__len__()
     assert length >= 0

@@ -26,26 +26,39 @@ model.eval()
 
 app = FastAPI()
 
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Handles HTTP exceptions and returns a JSON response.
+    """
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail},
     )
 
+
 @app.exception_handler(ValueError)
 async def http_exception_handler(request: Request, exc: ValueError):
+    """
+    Handles value errors and returns a JSON response.
+    """
     return JSONResponse(
         status_code=400,
         content={"message": exc.args[0]},
     )
 
+
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Handles generic exceptions and returns a JSON response.
+    """
     return JSONResponse(
         status_code=500,
         content={"message": "Internal Server Error"},
     )
+
 
 class InputData(BaseModel):
     """Use this data model to parse the input data JSON request body."""
@@ -55,6 +68,9 @@ class InputData(BaseModel):
 
 @app.post("/predict")
 async def predict(data: InputData):
+    """
+    API endpoint to predict the probability of hate speech in a given prompt.
+    """
     logits = model(data.text).cuda()
     norm_logits = F.softmax(logits, dim=-1)[:, 1].unsqueeze(-1)
     probability = round(norm_logits.item(), 4)

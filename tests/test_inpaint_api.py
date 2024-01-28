@@ -4,11 +4,8 @@ import concurrent.futures
 import time
 from io import BytesIO
 import requests
-import easyocr
-import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-# Define the base URL for the API
 INPAINT_API_URL = "http://127.0.0.1:8089"
 BUFFER = BytesIO()
 
@@ -31,7 +28,7 @@ def sample_image():
     return sample_image
 
 
-def send_inpaint_request(sample_image):
+def send_inpaint_request(sample_image: Image.Image):
     """
     Sends a POST request to the inpaint API.
     Args:
@@ -50,7 +47,7 @@ def send_inpaint_request(sample_image):
     return response
 
 
-def test_inpaint_api_response_ok(sample_image):
+def test_inpaint_api_response_ok(sample_image: Image.Image):
     """
     Tests inpaint API if it returns the correct format of response and status code.
     """
@@ -73,7 +70,7 @@ def test_inpaint_api_4xx():
 
 
 @pytest.mark.parametrize("num_requests", [5, 10])
-def test_concurrent_requests(sample_image, num_requests):
+def test_concurrent_requests(sample_image: Image.Image, num_requests: int):
     """
     Tests if the inpaint API can handle multiple concurrent requests.
     Args:
@@ -95,7 +92,9 @@ def test_concurrent_requests(sample_image, num_requests):
     assert all(result.status_code == 200 for result in results)
 
 
-def test_api_response_time(sample_image, acceptable_response_time=5.0):
+def test_api_response_time(
+    sample_image: Image.Image, acceptable_response_time: float = 5.0
+):
     """
     Tests if the response time of the API is within the acceptable threshold.
     Args:
@@ -104,7 +103,7 @@ def test_api_response_time(sample_image, acceptable_response_time=5.0):
     """
 
     start_time = time.time()
-    response = send_inpaint_request(sample_image)
+    _ = send_inpaint_request(sample_image)
     end_time = time.time()
     elapsed_time = end_time - start_time
     assert elapsed_time < acceptable_response_time

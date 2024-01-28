@@ -1,7 +1,6 @@
 import base64
 import time
 from io import BytesIO
-
 import config
 import requests
 import streamlit as st
@@ -30,7 +29,7 @@ st.markdown(
 )
 
 
-def call_inpaint_image_api(image, extract_text=True):
+def call_inpaint_image_api(image: Image.Image, extract_text=True):
     """
     Inpaints the image. Optionally, returns the text extracted from image with OCR.
     """
@@ -54,7 +53,7 @@ def call_inpaint_image_api(image, extract_text=True):
     raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
-def call_caption_api(inpainted_image):
+def call_caption_api(inpainted_image: Image.Image):
     """
     Generates captions for the inpainted image.
     """
@@ -75,9 +74,9 @@ def call_caption_api(inpainted_image):
     raise Exception(f"Error: {response.status_code} - {response.text}")
 
 
-def call_procap_api(caption):
+def call_procap_api(caption: str):
     """
-    Classifies the caption as harmful or not.
+    Classifies the meme as harmful or not based on the caption.
     """
     payload = {"text": caption}
 
