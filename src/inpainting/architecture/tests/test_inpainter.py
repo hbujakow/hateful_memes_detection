@@ -25,7 +25,7 @@ def sample_image():
     return sample_image
 
 
-def test_upload_img(sample_image):
+def test_upload_img(sample_image: Image.Image):
     """
     Tests if the image is uploaded correctly to the inpainter.
     """
@@ -34,7 +34,7 @@ def test_upload_img(sample_image):
     assert isinstance(inpainter.image, Image.Image)
 
 
-def test_image_inpainting(sample_image):
+def test_image_inpainting(sample_image: Image.Image):
     """
     Tests if the image is inpainted correctly by the inpainter,
     i.e. there is no text on the inpainted image.
@@ -46,7 +46,7 @@ def test_image_inpainting(sample_image):
     assert text_on_inpainted_image == []
 
 
-def test_extracted_text(sample_image):
+def test_extracted_text(sample_image: Image.Image):
     """
     Tests if the extracted text from the image is correct.
     """

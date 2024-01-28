@@ -1,5 +1,4 @@
-# FROM https://github.com/nipponjo/deepfillv2-pytorch/blob/master/model/networks.py
-
+# ADAPTED FROM https://github.com/nipponjo/deepfillv2-pytorch/blob/master/model/networks.py
 import numpy as np
 import torch
 import torch.nn as nn

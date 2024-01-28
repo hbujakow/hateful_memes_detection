@@ -1,7 +1,6 @@
 import os
 import pickle as pkl
 from argparse import ArgumentParser
-
 import pandas as pd
 import torch
 from lavis.models import load_model_and_preprocess
@@ -15,7 +14,20 @@ if not os.path.exists(OUTPUT_PATH):
     os.makedirs(OUTPUT_PATH)
 
 
-def generate_prompt_result(model, vis_processors, device, im, ques):
+def generate_prompt_result(
+    model, vis_processors, device: str, im: Image.Image, ques: str
+) -> str:
+    """
+    Generates caption for the image.
+    Args:
+        model: Model to use for caption generation.
+        vis_processors: Visual processors to use for caption generation.
+        device (str): Device to use for inference.
+        im (Image.Image): Image to generate caption for.
+        ques (str): Question to generate caption for.
+    Returns:
+        str: Generated caption.
+    """
     image = vis_processors["eval"](im).float().unsqueeze(0).to(device)
     ans = model.generate(
         {"image": image, "prompt": ("Question: %s Answer:" % (ques))},
@@ -24,7 +36,7 @@ def generate_prompt_result(model, vis_processors, device, im, ques):
     return ans[0]
 
 
-def main(args) -> None:
+def main(args):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     print(device)
 

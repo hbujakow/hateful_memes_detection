@@ -6,7 +6,7 @@ import torch
 from tqdm import tqdm
 from PIL import Image
 import math
-from typing import List
+from typing import List, Any
 
 sys.path.append("../LLaVA/")
 
@@ -27,7 +27,7 @@ from llava.mm_utils import (
 )
 
 
-def split_list(lst: List, n: int) -> List[List]:
+def split_list(lst: List[Any], n: int) -> List[List[Any]]:
     """
     Splits a list into n (roughly) equal-sized chunks
 
@@ -42,7 +42,7 @@ def split_list(lst: List, n: int) -> List[List]:
     return [lst[i : i + chunk_size] for i in range(0, len(lst), chunk_size)]
 
 
-def get_chunk(lst: List, n: int, k: int) -> List:
+def get_chunk(lst: List, n: int, k: int) -> List[Any]:
     """Gets the kth chunk of a list split into n (roughly) equal-sized chunks."""
     chunks = split_list(lst, n)
     return chunks[k]

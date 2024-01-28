@@ -1,19 +1,25 @@
 import json
 import os
 import pickle as pkl
-
 import numpy as np
 import torch
 import utils
 from tqdm import tqdm
+from typing import Dict, List, Tuple
 
 
-def load_pkl(path):
+def load_pkl(path: str) -> Dict[str, str]:
+    """
+    Loads a pickle file.
+    """
     data = pkl.load(open(path, "rb"))
     return data
 
 
-def read_json(path):
+def read_json(path: str) -> Dict[str, str]:
+    """
+    Reads a json file.
+    """
     utils.assert_exits(path)
     data = json.load(open(path, "rb"))
     """in anet-qa returns a list"""
@@ -21,7 +27,11 @@ def read_json(path):
 
 
 class MultiModalData:
-    def __init__(self, opt, mode="train"):
+    """
+    Multi-modal data loader.
+    """
+
+    def __init__(self, opt, mode: str = "train"):
         super(MultiModalData, self).__init__()
         self.opt = opt
         self.mode = mode
@@ -52,7 +62,12 @@ class MultiModalData:
         self.prepare_exp()
         print("The length of the dataset for:", mode, "is:", len(self.entries))
 
-    def load_entries(self, mode):
+    def load_entries(self, mode: str) -> Dict[str, str]:
+        """
+        Load entries from the json file.
+        Returns:
+            entries: a list of Pro-Cap entries
+        """
         # only in training mode, in few-shot setting the loading will be different
         path = os.path.join(
             self.opt.DATA, "domain_splits", self.opt.DATASET + "_" + mode + ".json"
@@ -89,16 +104,13 @@ class MultiModalData:
 
         captions = load_pkl(cap_path)
         entries = []
-        for k, row in enumerate(data):
+        for _, row in enumerate(data):
             label = row["label"]
             img = row["img"]
             if self.opt.CAP_TYPE == "caption":
-                cap = captions[img.split(".")[0]][
-                    :-1
-                ]  # remove the punctuation in the end
+                cap = captions[img.split(".")[0]][:-1]
             elif self.opt.CAP_TYPE == "vqa" and self.ask_cap:
                 cap = captions[img]
-
                 ext = []
                 person_flag = True
                 animal_flag = True
@@ -153,10 +165,16 @@ class MultiModalData:
             entries.append(entry)
         return entries
 
-    def enc(self, text):
+    def enc(self, text: str) -> torch.Tensor:
+        """
+        Encodes the text using the tokenizer.
+        """
         return self.tokenizer.encode(text, add_special_tokens=False)
 
     def prepare_exp(self):
+        """
+        Prepare the examples for model training.
+        """
         # add sampling
         support_indices = list(range(len(self.support_examples)))
         self.example_idx = []
@@ -170,9 +188,11 @@ class MultiModalData:
                 # available indexes for supporting examples
                 self.example_idx.append((query_idx, context_indices, sample_idx))
 
-    def select_context(self, context_examples):
+    def select_context(
+        self, context_examples: List[Dict[str, str]]
+    ) -> List[Dict[str, str]]:
         """
-        Select demonstrations from provided examples.
+        Selects demonstrations from provided examples for model.
         """
         num_labels = self.opt.NUM_LABELS
         max_demo_per_label = 1
@@ -185,12 +205,6 @@ class MultiModalData:
         order = np.random.permutation(len(context_examples))
         for i in order:
             label = context_examples[i]["label"]
-            # if num_labels == 1:
-            #     # Regression
-            #     # No implementation currently
-            #     label = (
-            #         "0" if float(label) <= median_mapping[self.args.task_name] else "1"
-            #     )
             if counts[label] < max_demo_per_label:
                 selection.append(context_examples[i])
                 counts[label] += 1
@@ -200,7 +214,13 @@ class MultiModalData:
         assert len(selection) > 0
         return selection
 
-    def process_prompt(self, examples):
+    def process_prompt(self, examples: List[Dict[str, str]]) -> Tuple[List[str], str]:
+        """
+        Process the prompt for the Pro-Cap model.
+        Returns:
+            prompt_texts: a list of prompt texts
+            test_text: the test text
+        """
         prompt_arch = " It was "
         concat_sent = []
 
@@ -218,7 +238,10 @@ class MultiModalData:
                 test_text = ent["meme_text"] + " . " + ent["cap"]
         return concat_sent, test_text
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Dict[str, str]:
+        """
+        Returns a batch of data.
+        """
         # query item
         entry = self.entries[index]
         # bootstrap_idx --> sample_idx
@@ -234,7 +257,6 @@ class MultiModalData:
         prompt_texts = " . </s> ".join(concate_sent)
 
         vid = entry["img"]
-        # label=torch.tensor(self.label_mapping_id[entry['label']])
         label = torch.tensor(entry["label"])
         target = torch.from_numpy(np.zeros((self.num_ans), dtype=np.float32))
         target[label] = 1.0
@@ -254,5 +276,8 @@ class MultiModalData:
         }
         return batch
 
-    def __len__(self):
+    def __len__(self) -> int:
+        """
+        Returns the length of the dataset.
+        """
         return len(self.entries)

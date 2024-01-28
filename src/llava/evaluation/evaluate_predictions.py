@@ -5,20 +5,20 @@ import argparse
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score, accuracy_score
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 sys.path.append("../LLaVA/")
 
 DATAPATH = "/home2/faculty/wjakubowski/memes_analysis/data/llava_preds/"
 
 
-def get_datasets(data_path: str):
+def get_datasets(data_path: str) -> List[str]:
     """
     Recursively traverses through the directory and its subdirectories, adding the full paths of all files to the output variable.
     """
     file_list = []
 
-    for root, dirs, files in os.walk(data_path):
+    for root, _, files in os.walk(data_path):
         for file in files:
             file_path = os.path.join(root, file)
             if file_path.endswith("json"):

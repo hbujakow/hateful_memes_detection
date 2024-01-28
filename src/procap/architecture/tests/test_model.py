@@ -2,6 +2,9 @@ from pbm import PromptHateModel
 
 
 def test_prompt_hate_model_forward():
+    """
+    Tests the forward method of the PromptHateModel class.
+    """
     model = PromptHateModel()
 
     all_texts = [

@@ -1,14 +1,12 @@
 import os
-
 import mlflow
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import utils
-from dataset import MultiModalData
 from sklearn.metrics import roc_auc_score
-from torch.utils.data import DataLoader
 from transformers import AdamW, get_linear_schedule_with_warmup
+from typing import Tuple
 
 MLFLOW_TRACKING_URI = "/home2/faculty/mgalkowski/memes_analysis/mlflow_data"
 
@@ -16,13 +14,19 @@ mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 mlflow.set_experiment("hateful_memes")
 
 
-def bce_for_loss(logits, labels):
+def bce_for_loss(logits: torch.Tensor, labels: torch.Tensor) -> torch.Tensor:
+    """
+    Computes the binary cross entropy loss.
+    """
     loss = nn.functional.binary_cross_entropy_with_logits(logits, labels)
     loss *= labels.size(1)
     return loss
 
 
-def compute_auc_score(logits, label):
+def compute_auc_score(logits: torch.Tensor, label: torch.Tensor) -> float:
+    """
+    Computes the AUC score for the given logits and labels.
+    """
     bz = logits.shape[0]
     logits = logits.cpu().numpy()
     label = label.cpu().numpy()
@@ -30,17 +34,21 @@ def compute_auc_score(logits, label):
     return auc
 
 
-def compute_score(logits, labels):
-    # print (logits,logits.shape)
+def compute_score(logits: torch.Tensor, labels: torch.Tensor) -> float:
+    """
+    Computes the accuracy score for the given logits and labels utilizing a one-hot encoding approach.
+    """
     logits = torch.max(logits, 1)[1]
-    # print (logits)
     one_hot = torch.zeros(*labels.size()).cuda()
     one_hot.scatter_(1, logits.view(-1, 1), 1)
     score = one_hot * labels
     return score.sum().float()
 
 
-def compute_scaler_score(logits, labels):
+def compute_scaler_score(logits: torch.Tensor, labels: torch.Tensor) -> float:
+    """
+    Computes the accuracy score for the given logits and labels by directly comparing the labels.
+    """
     logits = torch.max(logits, 1)[1]
     labels = labels.squeeze(-1)
     score = (logits == labels).int()
@@ -48,12 +56,27 @@ def compute_scaler_score(logits, labels):
 
 
 def log_hyperpara(logger, opt):
+    """
+    Log the hyperparameters.
+    Args:
+        logger (utils.Logger): Logger.
+        opt (argparse.Namespace): Arguments.
+    """
     dic = vars(opt)
     for k, v in dic.items():
         logger.write(k + " : " + str(v))
 
 
 def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
+    """
+    Trains the model for one epoch.
+    Args:
+        opt (argparse.Namespace): Arguments.
+        model (PromptHateModel): Model.
+        train_loader (DataLoader): Training data loader.
+        dev_loader (DataLoader): Dev data loader.
+        test_loader (DataLoader): Test data loader.
+    """
     with mlflow.start_run(
         run_name=f"{opt.MODEL_NAME.replace('-', '_').replace('/', '_')}_{opt.SAVE_NUM}"
     ):
@@ -72,7 +95,12 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             os.mkdir(log_path)
 
         logger = utils.Logger(
-            os.path.join(log_path, opt.SAVE_NUM + opt.MODEL_NAME.replace('-', '_').replace('/', '_') + ".txt")
+            os.path.join(
+                log_path,
+                opt.SAVE_NUM
+                + opt.MODEL_NAME.replace("-", "_").replace("/", "_")
+                + ".txt",
+            )
         )
         log_hyperpara(logger, opt)
 
@@ -163,7 +191,6 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
                 batch_score = compute_score(logits, target)
                 scores += batch_score
 
-                # print("Epoch:", epoch, "Iteration:", i, loss.item())  # , batch_score)
                 loss.backward()
                 optim.step()
                 scheduler.step()
@@ -174,7 +201,6 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
             mlflow.log_metric(
                 "train_loss", total_loss.item() / len(train_loader), step=epoch + 1
             )
-
 
             model.train(False)
             len_train = len(train_loader.dataset)
@@ -244,14 +270,28 @@ def train_for_epoch(opt, model, train_loader, dev_loader, test_loader):
         if opt.SAVE:
             torch.save(
                 model.state_dict(),
-                os.path.join(model_path, opt.SAVE_NUM + '_' + opt.MODEL_NAME.replace('-', '_').replace('/', '_') + ".pth"),
+                os.path.join(
+                    model_path,
+                    opt.SAVE_NUM
+                    + "_"
+                    + opt.MODEL_NAME.replace("-", "_").replace("/", "_")
+                    + ".pth",
+                ),
             )
             mlflow.pytorch.log_model(
-                model, f"{opt.MODEL_NAME.replace('-', '_').replace('/', '_')}_{opt.SAVE_NUM}"
+                model,
+                f"{opt.MODEL_NAME.replace('-', '_').replace('/', '_')}_{opt.SAVE_NUM}",
             )
 
 
-def eval_model(opt, model, data_loader, epoch_num):
+def eval_model(opt, model, data_loader, epoch_num: int) -> Tuple[float, float]:
+    """
+    Evaluates the model on the given data loader.
+    Args:
+        opt (argparse.Namespace): Arguments.
+        model (PromptHateModel): Model.
+        data_loader (DataLoader): Data loader.
+    """
     scores = 0.0
     auc = 0.0
     len_data = len(data_loader.dataset)
@@ -264,7 +304,6 @@ def eval_model(opt, model, data_loader, epoch_num):
         with torch.no_grad():
             label = batch["label"].float().cuda().view(-1, 1)
             target = batch["target"].cuda()
-            # img = batch["img"]
 
             if opt.USE_DEMO:
                 text = batch["prompt_all_text"]
@@ -276,7 +315,6 @@ def eval_model(opt, model, data_loader, epoch_num):
             scores += batch_score
             probs = F.softmax(logits, dim=-1)
             norm_logits = probs[:, 1].unsqueeze(-1)
-            # bz = target.shape[0]
             total_logits.append(norm_logits)
             total_labels.append(label)
             total_probs.append(probs)
@@ -288,14 +326,34 @@ def eval_model(opt, model, data_loader, epoch_num):
         path_to_save = f'/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/architecture/logits_probs/{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}'
         if not os.path.exists(path_to_save):
             os.mkdir(path_to_save)
-        torch.save(total_logits, os.path.join(path_to_save, f'logits_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs{opt.EPOCHS}.pkl'))
-        torch.save(total_probs, os.path.join(path_to_save, f'probs_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}.pkl'))
+        torch.save(
+            total_logits,
+            os.path.join(
+                path_to_save,
+                f'logits_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs{opt.EPOCHS}.pkl',
+            ),
+        )
+        torch.save(
+            total_probs,
+            os.path.join(
+                path_to_save,
+                f'probs_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}.pkl',
+            ),
+        )
 
     auc = compute_auc_score(total_logits, total_labels)
     return scores * 100.0 / len_data, auc * 100.0 / len_data
 
 
-def eval_multi_model(opt, model, data_loader, epoch_num):
+def eval_multi_model(opt, model, data_loader, epoch_num: int) -> Tuple[float, float]:
+    """
+    Evaluates the model on the given data loader using multiple queries (Multi-Query Ensemble).
+    Args:
+        opt (argparse.Namespace): Arguments.
+        model (PromptHateModel): Model.
+        data_loader (DataLoader): Data loader.
+        epoch_num (int): Epoch number.
+    """
     num_queries = opt.NUM_QUERIES
     labels_record = {}
     logits_record = {}
@@ -343,8 +401,20 @@ def eval_multi_model(opt, model, data_loader, epoch_num):
         path_to_save = f'/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/architecture/logits_probs/{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}'
         if not os.path.exists(path_to_save):
             os.mkdir(path_to_save)
-        torch.save(logits, os.path.join(path_to_save, f'logits_query_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs{opt.EPOCHS}.pkl'))
-        torch.save(probs, os.path.join(path_to_save, f'probs_query_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}.pkl'))
+        torch.save(
+            logits,
+            os.path.join(
+                path_to_save,
+                f'logits_query_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs{opt.EPOCHS}.pkl',
+            ),
+        )
+        torch.save(
+            probs,
+            os.path.join(
+                path_to_save,
+                f'probs_query_{opt.SAVE_NUM}_{opt.MODEL_NAME.replace("-", "_").replace("/", "_")}_epochs_{opt.EPOCHS}.pkl',
+            ),
+        )
 
     scores = compute_scaler_score(probs, labels)
     auc = compute_auc_score(logits, labels)

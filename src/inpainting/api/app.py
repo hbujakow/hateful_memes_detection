@@ -18,6 +18,9 @@ img_converter = ImageConverter()
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Handles HTTP exceptions and returns a JSON response.
+    """
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail},
@@ -26,6 +29,9 @@ async def http_exception_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(ValueError)
 async def http_exception_handler(request: Request, exc: ValueError):
+    """
+    Handles value errors and returns a JSON response.
+    """
     return JSONResponse(
         status_code=400,
         content={"message": exc.args[0]},
@@ -34,6 +40,9 @@ async def http_exception_handler(request: Request, exc: ValueError):
 
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Handles generic exceptions and returns a JSON response.
+    """
     return JSONResponse(
         status_code=500,
         content={"message": "Internal Server Error"},
@@ -48,6 +57,9 @@ class InputData(BaseModel):
 
 @app.post("/inpaint")
 async def inpaint(image: InputData):
+    """
+    API endpoint for inpainting images.
+    """
     im = Image.open(BytesIO(base64.b64decode((image.image))))
     if not im.format:
         raise ValueError("Invalid image format. Please upload a valid image.")

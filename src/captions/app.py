@@ -1,6 +1,5 @@
 import base64
 from io import BytesIO
-
 import torch
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
@@ -16,26 +15,39 @@ model, vis_processors, _ = load_model_and_preprocess(
 
 app = FastAPI()
 
+
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
+    """
+    Handles HTTP exceptions and returns a JSON response.
+    """
     return JSONResponse(
         status_code=exc.status_code,
         content={"message": exc.detail},
     )
 
+
 @app.exception_handler(ValueError)
 async def http_exception_handler(request: Request, exc: ValueError):
+    """
+    Handles value errors and returns a JSON response.
+    """
     return JSONResponse(
         status_code=400,
         content={"message": exc.args[0]},
     )
 
+
 @app.exception_handler(Exception)
 async def generic_exception_handler(request: Request, exc: Exception):
+    """
+    Handles generic exceptions and returns a JSON response.
+    """
     return JSONResponse(
         status_code=500,
         content={"message": "Internal Server Error"},
     )
+
 
 person_categories = {
     "race": "what is the race of the person in the image?",
@@ -49,7 +61,12 @@ animal_categories = {
 }
 
 
-def generate_prompt_result(model, vis_processors, device, im, ques):
+def generate_prompt_result(
+    model, vis_processors, device: str, im: Image.Image, ques: str
+) -> str:
+    """
+    Geneerates the model caption for the given image and question.
+    """
     image = vis_processors["eval"](im).float().unsqueeze(0).to(device)
     ans = model.generate(
         {"image": image, "prompt": ("Question: %s Answer:" % (ques))},
@@ -63,8 +80,14 @@ class InputData(BaseModel):
 
     image: str
 
+
 @app.post("/generate_captions")
 async def predict(image: InputData):
+    """
+    API endpoint which generates captions for the given image.
+    Returns:
+        JSON response with caption.
+    """
     im = Image.open(BytesIO(base64.b64decode((image.image)))).convert("RGB")
     captions = {}
 
@@ -107,7 +130,9 @@ async def predict(image: InputData):
         captions["animal"] = caption
 
     response = ""
-    for category in "generic,race,gender,country,animal,valid_disable,religion".split(","):
+    for category in "generic,race,gender,country,animal,valid_disable,religion".split(
+        ","
+    ):
         if category not in captions:
             continue
         response += captions[category] + " . "

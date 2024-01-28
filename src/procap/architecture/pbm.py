@@ -1,12 +1,19 @@
 import torch
 import torch.nn as nn
 from transformers import RobertaForMaskedLM, RobertaTokenizer
+from typing import List, Tuple
 
 
 class PromptHateModel(nn.Module):
     def __init__(
-        self, label_words=["good", "bad"], max_length=320, model_name="roberta-large"
+        self,
+        label_words: List[str] = ["good", "bad"],
+        max_length: int = 320,
+        model_name: str = "roberta-large",
     ):
+        """
+        Prompt-based hate speech detection model.
+        """
         super(PromptHateModel, self).__init__()
         self.roberta = RobertaForMaskedLM.from_pretrained(model_name)
         self.tokenizer = RobertaTokenizer.from_pretrained(model_name)
@@ -21,7 +28,18 @@ class PromptHateModel(nn.Module):
                 )
             )
 
-    def forward_single_cap(self, tokens, attention_mask, mask_pos):
+    def forward_single_cap(
+        self, tokens: torch.Tensor, attention_mask: torch.Tensor, mask_pos: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass for a single caption.
+        Args:
+            tokens (torch.Tensor): Input tokens.
+            attention_mask (torch.Tensor): Attention mask.
+            mask_pos (torch.Tensor): Mask position.
+        Returns:
+            torch.Tensor: Logits.
+        """
         batch_size = tokens.size(0)
         mask_pos = mask_pos.squeeze()
 
@@ -35,7 +53,19 @@ class PromptHateModel(nn.Module):
         logits = torch.cat(logits, -1)
         return logits
 
-    def generate_input_tokens(self, sents, max_length=320):
+    def generate_input_tokens(
+        self, sents: List[str], max_length: int = 320
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+        """
+        Generate input tokens.
+        Args:
+            sents (List[str]): List of sentences.
+            max_length (int): Maximum length.
+        Returns:
+            torch.Tensor: Tokens.
+            torch.Tensor: Attention mask.
+            torch.Tensor: Mask position.
+        """
         token_info = self.tokenizer(
             sents,
             padding="longest",
@@ -49,7 +79,14 @@ class PromptHateModel(nn.Module):
         mask_pos = torch.LongTensor(mask_pos)
         return tokens, attention_mask, mask_pos
 
-    def forward(self, all_texts):
+    def forward(self, all_texts: List[str]) -> torch.Tensor:
+        """
+        Passes the input through the model.
+        Args:
+            all_texts (List[str]): List of texts.
+        Returns:
+            torch.Tensor: Logits for each text.
+        """
         tokens, attention_mask, mask_pos = self.generate_input_tokens(
             all_texts, self.max_length
         )

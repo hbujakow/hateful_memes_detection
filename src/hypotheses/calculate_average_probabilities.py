@@ -5,7 +5,7 @@ import torch
 from typing import List
 
 
-def get_model_types(directory: str):
+def get_model_types(directory: str) -> List[str]:
     """
     Returns list of model types (e.g. "bert-base-uncased", "roberta-base", etc.)
     """

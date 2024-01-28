@@ -26,7 +26,8 @@ def sample_image():
 
     return sample_image
 
-def send_caption_request(sample_image):
+
+def send_caption_request(sample_image: Image.Image) -> requests.Response:
     """
     Sends a POST request to the inpaint API.
     Returns:
@@ -38,11 +39,12 @@ def send_caption_request(sample_image):
 
     payload = {"image": encoded_image}
 
-    response = requests.post(CAPTION_API_URL+"/generate_captions", json=payload)
+    response = requests.post(CAPTION_API_URL + "/generate_captions", json=payload)
 
     return response
 
-def test_captions_ok(sample_image):
+
+def test_captions_ok(sample_image: Image.Image):
     """
     Test captions API.
     Args:
@@ -52,22 +54,42 @@ def test_captions_ok(sample_image):
     assert response.status_code == 200
     assert isinstance(response.json()["caption"], str)
 
+
 def test_captions_4xx():
-    response = requests.post(CAPTION_API_URL+"/generate_captions", json={"image": 123})
+    response = requests.post(
+        CAPTION_API_URL + "/generate_captions", json={"image": 123}
+    )
     assert response.status_code >= 400 and response.status_code < 500
-    response2 = requests.post(CAPTION_API_URL+"/generate_captions", json={"imageee": "123"})
+    response2 = requests.post(
+        CAPTION_API_URL + "/generate_captions", json={"imageee": "123"}
+    )
     assert response2.status_code >= 400 and response2.status_code < 500
 
-def test_api_response_time(sample_image, acceptable_response_time=10.0):
 
+def test_api_response_time(
+    sample_image: Image.Image, acceptable_response_time: float = 10.0
+):
+    """
+    Tests if the API reponds within acceptable response time.
+    Args:
+        sample_image (PIL.Image.Image): Sample image.
+        acceptable_response_time (float): Acceptable response time in seconds.
+    """
     start_time = time.time()
-    response = send_caption_request(sample_image)
+    _ = send_caption_request(sample_image)
     end_time = time.time()
     elapsed_time = end_time - start_time
     assert elapsed_time < acceptable_response_time
 
+
 @pytest.mark.parametrize("num_requests", [5, 10])
-def test_concurrent_requests(sample_image, num_requests):
+def test_concurrent_requests(sample_image: Image.Image, num_requests: int):
+    """
+    Tests if the API can handle concurrent requests.
+    Args:
+        sample_image (PIL.Image.Image): Sample image.
+        num_requests (int): Number of concurrent requests.
+    """
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_requests) as executor:
         future_to_request = {
             executor.submit(send_caption_request, sample_image): i
