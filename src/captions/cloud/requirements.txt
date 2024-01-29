@@ -1,5 +1,5 @@
-azure-functions
 fastapi
+gunicorn
 pillow
 salesforce-lavis
 torch

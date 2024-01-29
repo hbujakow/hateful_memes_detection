@@ -1,0 +1,10 @@
+easyocr
+fastapi
+gunicorn
+numpy
+pillow
+pydantic
+transformers
+torch
+torchvision
+tqdm

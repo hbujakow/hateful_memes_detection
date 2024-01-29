@@ -1,5 +1,5 @@
-azure-functions
 fastapi
-json
+uvicorn
 pydantic
 torch
+transformers
