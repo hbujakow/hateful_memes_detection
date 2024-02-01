@@ -53,5 +53,6 @@ terraform apply
 
 5. Deploy the LLM model using the Azure Machine Learning Python SDK script:
 ```bash
-python deploy_model.py
+pip install -r deployment/requirements.txt
+python deployment/deploy_model.py
 ```
