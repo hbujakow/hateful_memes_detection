@@ -119,3 +119,29 @@ resource "azurerm_machine_learning_workspace" "memes-ml-workspace" {
         type = "SystemAssigned"
     }
 }
+
+resource "azurerm_kubernetes_cluster" "aks_cluster" { #TBC
+  name                = "memes-aks-cluster"
+  location            = azurerm_resource_group.memes-resource-group.location
+  resource_group_name = azurerm_resource_group.memes-resource-group.name
+  dns_prefix          = "memesAKSDNS"
+
+  default_node_pool {
+    name       = "default"
+    node_count = 1
+    vm_size    = "Standard_DS2_v2"
+  }
+
+  # service_principal {
+  #   client_id     = "<your-client-id>"
+  #   client_secret = "<your-client-secret>"
+  # }
+
+  tags = {
+    Environment = "Production"
+  }
+}
+
+output "kube_config" {
+  value = azurerm_kubernetes_cluster.aks_cluster.kube_config_raw
+}
