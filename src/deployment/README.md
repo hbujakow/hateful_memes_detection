@@ -1,11 +1,24 @@
 # Hateful Memes Detection application deployment on Azure
 
-The deployment of the system is done on the Azure cloud by utilizing Azure Cloud Function and Azure Web App services for hosting the APIs and demo web page.
+The deployment of the system is done on the Azure cloud by utilizing several Azure services to host the architecture.
+
+## Cloud infrastructure
+
+The concept is depicted on the diagram.
+
+![Diagram](deployment_azure.png)
+
+The architecture on cloud leverages several components:
+* Large Language Model [vinai/bertweet-large](https://huggingface.co/vinai/bertweet-large) used for classification is hosted using Azure Machine Learning
+* Each microservice is containerized and Docker images are pushed to Azure Container Registry
+* Containers are managed by Azure Kubernetes Service
+
+## Deployment
 
 **Prerequisites**:
 * Valid Azure subscription.
 * Azure client installed (`az` cli).
-* Docker installed on your local computer.
+* Docker Engine installed on your local computer. You can download and install it from [Docker website](https://docs.docker.com/engine/install/).
 * Terraform installed on your machine. You can download and install it from [Terraform Downloads](https://www.terraform.io/downloads.html).
 
 1. **Log in** to your Azure acount using Aure client commands:
@@ -20,16 +33,16 @@ az group create --name memes-resource-group --location WestEurope
 az acr create --resource-group memes_rg --name memescontainerregistry --sku Basic
 ```
 
-3. **Build Docker image and push the container to Azure Container Registry** using Docker commands.
+3. **Build** each Docker image and **push** the container to Azure Container Registry using Docker commands.
 ```bash
-cd ../demo/ # navigate to demo folder
+cd ../demo/ # navigate to each folder (captions, demo, inpainting, procap)
 docker login memescontainerregistry.azurecr.io
-docker build -t memescontainerregistry.azurecr.io/hateful_memes_app .
-docker push memescontainerregistry.azurecr.io/hateful_memes_app
+docker build -t memescontainerregistry.azurecr.io/<docker_image_name> .
+docker push memescontainerregistry.azurecr.io/<docker_image_name>
 ```
 
 
-4. **Deploy** the infrastructure using Terraform:
+4. **Deploy** the infrastructure using Terraform (after providing the env variables):
 ```bash
 cd deployment # change dir to deployment folder.
 terraform init
@@ -37,10 +50,8 @@ terraform import azurerm_resource_group.memes-resource-group /subscriptions/<you
 terraform plan
 terraform apply
 ```
-5. **Navigate** to project root folder and **create** HTTP triggers in cloud function for each API by execute the following Azure client commmands:
+
+5. Deploy the LLM model using the Azure Machine Learning Python SDK script:
 ```bash
-cd <path/to/root/directory> # modify this line of code by inserting appropriate path
-az functionapp function update --name captioning_api --resource-group memes_rg --function-name inpainting_api --code inpainting/cloud_function --runtime python --authlevel anonymous
-az functionapp function update --name captioning_api --resource-group memes_rg --function-name captioning_api --code captions/cloud_function --runtime python --authlevel anonymous
-az functionapp function update --name captioning_api --resource-group memes_rg --function-name classification_api --code procap/cloud_function --runtime python --authlevel anonymous
+python deploy_model.py
 ```
