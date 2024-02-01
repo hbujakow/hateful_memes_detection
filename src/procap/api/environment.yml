@@ -33,6 +33,8 @@ dependencies:
       - asttokens==2.4.1
       - async-lru==2.0.4
       - attrs==23.1.0
+      - azure-ai-ml==1.13.0
+      - azure-identity==1.15.0
       - babel==2.13.1
       - beautifulsoup4==4.12.2
       - bleach==6.1.0

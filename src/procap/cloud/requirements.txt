@@ -1,3 +1,5 @@
+azure-ai-ml
+azure-identity
 fastapi
 uvicorn
 pydantic

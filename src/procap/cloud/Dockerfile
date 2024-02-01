@@ -1,11 +1,11 @@
 FROM python:3.10
 
-WORKDIR /app
+WORKDIR /procap
 
-COPY ../. /app
+COPY . /procap
 
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+RUN pip install -r requirements.txt
 
 EXPOSE 8088
 
-CMD ["uvicorn", "app:app", "--reload", "--port", "8088", "--host", "0.0.0.0"]
+CMD ["uvicorn", "procap:app", "--reload", "--port", "8088", "--host", "0.0.0.0"]

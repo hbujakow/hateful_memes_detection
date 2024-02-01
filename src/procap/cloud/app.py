@@ -1,28 +1,23 @@
-import sys
-
-sys.path.append("../")
-
 import torch
 import torch.nn.functional as F
 import uvicorn
-from architecture.pbm import PromptHateModel
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from azure.ai.ml import MLClient
+from azure.identity import DefaultAzureCredential
+from dotenv import load_dotenv
+import os
 
-label_words = ["good", "bad"]
-max_length = 447
-model_name = "roberta-large"
-states_path = "/home2/faculty/mgalkowski/memes_analysis/hateful_memes/procap/models/1111_mem/20240107_1425_roberta_large.pth"
+load_dotenv()
 
-model = PromptHateModel(
-    label_words=label_words, max_length=max_length, model_name=model_name
+subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")
+resource_group = os.environ.get("AZURE_RESOURCE_GROUP")
+workspace = os.environ.get("AZURE_ML_WORKSPACE")
+
+ml_client = MLClient(
+    DefaultAzureCredential(), subscription_id, resource_group, workspace
 )
-
-states = torch.load(states_path)
-
-model.load_state_dict(states, strict=False)
-model.eval()
 
 app = FastAPI()
 
@@ -59,7 +54,11 @@ class InputData(BaseModel):
 
 @app.post("/predict")
 async def predict(data: InputData):
-    logits = model(data.text).cuda()
+    request_file = {"input_data": data.text}
+    logits = ml_client.online_endpoints.invoke(
+        endpoint_name="hateful-memes-classifier",
+        request_file=request_file,
+    )
     norm_logits = F.softmax(logits, dim=-1)[:, 1].unsqueeze(-1)
     probability = round(norm_logits.item(), 4)
     predicted_class = torch.where(norm_logits > 0.5, 1, 0).item()
