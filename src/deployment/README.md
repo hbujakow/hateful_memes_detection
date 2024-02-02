@@ -52,15 +52,10 @@ terraform plan
 terraform apply
 ```
 
-5. ****Host**** the LLM model using the Azure Machine Learning Python SDK script:
+5. **Host** the LLM model using the Azure Machine Learning Python SDK script:
 ```bash
 pip install -r deployment/requirements.txt
 python deployment/deploy_model.py
-```
-
-6. **Deploy** Docker containers to Azure Kubernetes Service using `Kubectl` client:
-```bash
-kubectl apply -f containers-deploy.yaml
 ```
 
 6. **Deploy** Docker containers to Azure Kubernetes Service using `Kubectl` client:
