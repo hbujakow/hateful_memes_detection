@@ -35,7 +35,7 @@ az acr create --resource-group memes_rg --name memescontainerregistry --sku Basi
 ``` -->
 
 
-2. **Create** the cloud infrastructure using Terraform (after providing the env variables):
+2. **Create** the cloud infrastructure using Terraform:
 ```bash
 cd deployment # change dir to deployment folder.
 terraform init
@@ -44,7 +44,7 @@ terraform plan
 terraform apply
 ```
 
-3. **Host** the LLM model using the Azure Machine Learning Python SDK script:
+3. **Host** the LLM model by using the Azure Machine Learning Python SDK script:
 ```bash
 pip install -r deployment/requirements.txt
 python deployment/deploy_model.py
