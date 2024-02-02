@@ -28,22 +28,14 @@ az login
 az account set --subscription "your-azure-subscription-id"
 ```
 
-2. **Create resource group and container registry** using Azure client command:
+<!-- 2. **Create resource group and container registry** using Azure client command:
 ```bash
 az group create --name memes-resource-group --location WestEurope
 az acr create --resource-group memes_rg --name memescontainerregistry --sku Basic
-```
-
-3. **Build** each Docker image and **push** the container to Azure Container Registry using Docker commands.
-```bash
-cd ../demo/ # navigate to each folder (captions, demo, inpainting, procap)
-docker login memescontainerregistry.azurecr.io
-docker build -t memescontainerregistry.azurecr.io/<docker_image_name> .
-docker push memescontainerregistry.azurecr.io/<docker_image_name>
-```
+``` -->
 
 
-4. **Deploy** the infrastructure using Terraform (after providing the env variables):
+2. **Create** the cloud infrastructure using Terraform (after providing the env variables):
 ```bash
 cd deployment # change dir to deployment folder.
 terraform init
@@ -52,13 +44,27 @@ terraform plan
 terraform apply
 ```
 
-5. **Host** the LLM model using the Azure Machine Learning Python SDK script:
+3. **Host** the LLM model using the Azure Machine Learning Python SDK script:
 ```bash
 pip install -r deployment/requirements.txt
 python deployment/deploy_model.py
 ```
 
-6. **Deploy** Docker containers to Azure Kubernetes Service using `Kubectl` client:
+4. **Build** each Docker image and **push** the container to Azure Container Registry using Docker commands.
+*Disclaimer* the predefined images names are respectively:
+* Streamlit web app demo - *hateful_memes_app*
+* Inpainting API - *memes_inpainting_api*
+* Captioning API - *memes_captioning_api*
+* Classifying API - *memes_classifying_api*
+
+```bash
+docker login memescontainerregistry.azurecr.io
+cd ../demo/ # navigate to each folder (captions, demo, inpainting, procap)
+docker build -t memescontainerregistry.azurecr.io/<docker_image_name> .
+docker push memescontainerregistry.azurecr.io/<docker_image_name>
+```
+
+5. **Deploy** Docker containers to Azure Kubernetes Service using `Kubectl` client:
 ```bash
 kubectl apply -f containers-deploy.yaml
 ```
