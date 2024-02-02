@@ -44,7 +44,7 @@ terraform plan
 terraform apply
 ```
 
-3. **Host** the LLM model by using the Azure Machine Learning Python SDK script:
+3. **Host** the LLM model by using the Azure Machine Learning Python SDK script (set appropriate env variables first!):
 ```bash
 pip install -r deployment/requirements.txt
 python deployment/deploy_model.py

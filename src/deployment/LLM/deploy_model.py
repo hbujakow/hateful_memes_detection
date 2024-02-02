@@ -28,9 +28,7 @@ def main():
         Model(name=model_name, path=model_local_path, type=AssetTypes.MLFLOW_MODEL)
     )
 
-    endpoint_name = "hateful-memes-classifier-" + datetime.datetime.now().strftime(
-        "%m%d%H%M%f"
-    )
+    endpoint_name = "hateful-memes-classifier"
 
     endpoint = ManagedOnlineEndpoint(
         name=endpoint_name,
