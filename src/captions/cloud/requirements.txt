@@ -1,5 +1,5 @@
 fastapi
-gunicorn
+uvicorn
 pillow
 salesforce-lavis
 torch

@@ -1,6 +1,6 @@
 easyocr
 fastapi
-gunicorn
+uvicorn
 numpy
 pillow
 pydantic
