@@ -72,22 +72,23 @@ resource "azurerm_container_app" "inpainting_api_container" {
         }
   }
 }
-# Blip2 model probably needs to be deployed in AzureML as well
-# resource "azurerm_container_app" "captioning_api_container" { 
-#     name                         = "captioning-api"
-#     container_app_environment_id = azurerm_container_app_environment.memes_app_environment.id
-#     resource_group_name          = azurerm_resource_group.memes-resource-group.name
-#     revision_mode                = "Single"
 
-#     template {
-#         container {
-#         name   = "hateful-memes-captioning-api-container"
-#         image  = "memescontainerregistry.azurecr.io/hateful_memes_captioning_api:latest"
-#         cpu    = 0.25
-#         memory = "0.5Gi"
-#         }
-#   }
-# }
+# Blip2 model probably needs to be deployed in AzureML as well
+resource "azurerm_container_app" "captioning_api_container" { 
+    name                         = "captioning-api"
+    container_app_environment_id = azurerm_container_app_environment.memes_app_environment.id
+    resource_group_name          = azurerm_resource_group.memes-resource-group.name
+    revision_mode                = "Single"
+
+    template {
+        container {
+        name   = "hateful-memes-captioning-api-container"
+        image  = "memescontainerregistry.azurecr.io/hateful_memes_captioning_api:latest"
+        cpu    = 4
+        memory = "8Gi"
+        }
+  }
+}
 
 # workspace for RoBERTa (and Blip2 model)
 

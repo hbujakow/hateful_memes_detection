@@ -20,6 +20,7 @@ The architecture on cloud leverages several components:
 * Azure client installed (`az` cli).
 * Docker Engine installed on your local computer. You can download and install it from [Docker website](https://docs.docker.com/engine/install/).
 * Terraform installed on your machine. You can download and install it from [Terraform Downloads](https://www.terraform.io/downloads.html).
+* Kubernetes client installed (`kubectl`). You can download and install it from [Kubernetes Tools](https://kubernetes.io/docs/tasks/tools/).
 
 1. **Log in** to your Azure acount using Aure client commands:
 ```bash
@@ -51,8 +52,13 @@ terraform plan
 terraform apply
 ```
 
-5. Deploy the LLM model using the Azure Machine Learning Python SDK script:
+5. **Deploy** the LLM model using the Azure Machine Learning Python SDK script:
 ```bash
 pip install -r deployment/requirements.txt
 python deployment/deploy_model.py
+```
+
+6. **Deploy** Docker containers to Azure Kubernetes Service using `Kubectl` client:
+```bash
+kubectl apply -f containers-deploy.yaml
 ```

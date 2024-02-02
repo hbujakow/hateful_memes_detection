@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hateful-memes-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hateful-memes-app
+  template:
+    metadata:
+      labels:
+        app: hateful-memes-app
+    spec:
+      containers:
+      - name: hateful-memes-app
+        image: memescontainerregistry.azurecr.io/hateful_memes_app:latest
+        ports:
+        - containerPort: 8501
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memes-inpainting-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: memes-inpainting-api
+  template:
+    metadata:
+      labels:
+        app: memes-inpainting-api
+    spec:
+      containers:
+      - name: memes-inpainting-api
+        image: memescontainerregistry.azurecr.io/memes_inpainting_api:latest
+        ports:
+        - containerPort: 8089
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memes-captioning-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: memes-captioning-api
+  template:
+    metadata:
+      labels:
+        app: memes-captioning-api
+    spec:
+      containers:
+      - name: memes-captioning-api
+        image: memescontainerregistry.azurecr.io/memes_captioning_api:latest
+        ports:
+        - containerPort: 8088
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: memes-classification-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: memes-classification-api
+  template:
+    metadata:
+      labels:
+        app: memes-classification-api
+    spec:
+      containers:
+      - name: memes-classification-api
+        image: memescontainerregistry.azurecr.io/memes_classification_api:latest
+        ports:
+        - containerPort: 8087
